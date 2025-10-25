@@ -8,7 +8,6 @@ namespace Biblioteca_U2.Controllers
 {
     public class AccountController : Controller
     {
-        // CORREGIDO: Usar Model1 en lugar de db_bibliotecaEntities
         private Model1 db = new Model1();
 
         // GET: Login
@@ -26,11 +25,13 @@ namespace Biblioteca_U2.Controllers
             {
                 try
                 {
+                    // Buscar usuario por email y contraseña SIN HASHEAR
                     var usuario = db.tbusuario.FirstOrDefault(u =>
                         u.email == model.Email &&
+                        u.contrasena == model.Contrasena && // Comparación directa
                         u.activo == true);
 
-                    if (usuario != null && VerificarContrasena(model.Contrasena, usuario.contrasena))
+                    if (usuario != null)
                     {
                         if (usuario.estado_cuenta == "bloqueada" || usuario.estado_cuenta == "suspendida")
                         {
@@ -82,6 +83,7 @@ namespace Biblioteca_U2.Controllers
             {
                 ViewBag.Error = "Error al cargar las carreras: " + ex.Message;
             }
+
             return View();
         }
 
@@ -110,13 +112,13 @@ namespace Biblioteca_U2.Controllers
                         return View(model);
                     }
 
-                    // Crear nuevo usuario
+                    // Crear nuevo usuario - CONTRASEÑA SIN HASHEAR
                     var nuevoUsuario = new tbusuario
                     {
                         nombre = model.Nombre,
                         apellido = model.Apellido,
                         email = model.Email,
-                        contrasena = EncriptarContrasena(model.Contrasena),
+                        contrasena = model.Contrasena, // Guardamos en texto plano
                         codigo_identificacion = model.CodigoIdentificacion,
                         id_carrera = model.IdCarrera,
                         telefono = model.Telefono,
@@ -152,23 +154,6 @@ namespace Biblioteca_U2.Controllers
             Session.Clear();
             Session.Abandon();
             return RedirectToAction("Login");
-        }
-
-        // Métodos auxiliares para encriptación
-        private string EncriptarContrasena(string contrasena)
-        {
-            using (var sha256 = System.Security.Cryptography.SHA256.Create())
-            {
-                var bytes = System.Text.Encoding.UTF8.GetBytes(contrasena);
-                var hash = sha256.ComputeHash(bytes);
-                return Convert.ToBase64String(hash);
-            }
-        }
-
-        private bool VerificarContrasena(string contrasenaIngresada, string contrasenaAlmacenada)
-        {
-            var hashIngresado = EncriptarContrasena(contrasenaIngresada);
-            return hashIngresado == contrasenaAlmacenada;
         }
 
         protected override void Dispose(bool disposing)
