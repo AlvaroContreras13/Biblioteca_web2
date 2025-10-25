@@ -1,0 +1,249 @@
+﻿@model Biblioteca_U2.Models.RegistroViewModel
+
+@{
+    ViewBag.Title = "Registro";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Sistema de Biblioteca Universitaria</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .registro-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 50px 40px;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+            .header-section i {
+                font-size: 60px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                margin-bottom: 15px;
+            }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .btn-registro {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+            .btn-registro:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            }
+
+        .input-group-text {
+            background: transparent;
+            border-right: none;
+        }
+
+        .form-control, .form-select {
+            border-left: none;
+        }
+
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+
+        .password-strength {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="registro-container">
+            <div class="header-section">
+                <i class="fas fa-user-graduate"></i>
+                <h2>Crear Cuenta</h2>
+                <p class="text-muted">Únete a nuestra comunidad de intercambio de libros</p>
+            </div>
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle"></i>
+                    Por favor corrige los errores en el formulario
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @using (Html.BeginForm("Registro", "Account", FormMethod.Post, new { @class = "needs-validation" }))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="row">
+                    <!-- Nombre -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label required-field">@Html.DisplayNameFor(m => m.Nombre)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            @Html.TextBoxFor(m => m.Nombre, new { @class = "form-control", placeholder = "Tu nombre" })
+                        </div>
+                        @Html.ValidationMessageFor(m => m.Nombre, "", new { @class = "text-danger small" })
+                    </div>
+
+                    <!-- Apellido -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label required-field">@Html.DisplayNameFor(m => m.Apellido)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            @Html.TextBoxFor(m => m.Apellido, new { @class = "form-control", placeholder = "Tu apellido" })
+                        </div>
+                        @Html.ValidationMessageFor(m => m.Apellido, "", new { @class = "text-danger small" })
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div class="mb-3">
+                    <label class="form-label required-field">@Html.DisplayNameFor(m => m.Email)</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "ejemplo@virtual.upt.pe", type = "email" })
+                    </div>
+                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger small" })
+                    <small class="text-muted">Solo se permiten correos institucionales @@virtual.upt.pe</small>
+                </div>
+
+                <div class="row">
+                    <!-- Código de Identificación -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label required-field">@Html.DisplayNameFor(m => m.CodigoIdentificacion)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                            @Html.TextBoxFor(m => m.CodigoIdentificacion, new { @class = "form-control", placeholder = "12345", maxlength = "5" })
+                        </div>
+                        @Html.ValidationMessageFor(m => m.CodigoIdentificacion, "", new { @class = "text-danger small" })
+                    </div>
+
+                    <!-- Teléfono -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">@Html.DisplayNameFor(m => m.Telefono)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                            @Html.TextBoxFor(m => m.Telefono, new { @class = "form-control", placeholder = "987654321", type = "tel" })
+                        </div>
+                        @Html.ValidationMessageFor(m => m.Telefono, "", new { @class = "text-danger small" })
+                    </div>
+                </div>
+
+                <!-- Carrera -->
+                <div class="mb-3">
+                    <label class="form-label required-field">@Html.DisplayNameFor(m => m.IdCarrera)</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-graduation-cap"></i></span>
+                        @Html.DropDownListFor(m => m.IdCarrera, (SelectList)ViewBag.Carreras, "-- Selecciona tu carrera --", new { @class = "form-select" })
+                    </div>
+                    @Html.ValidationMessageFor(m => m.IdCarrera, "", new { @class = "text-danger small" })
+                </div>
+
+                <div class="row">
+                    <!-- Contraseña -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label required-field">@Html.DisplayNameFor(m => m.Contrasena)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            @Html.PasswordFor(m => m.Contrasena, new { @class = "form-control", placeholder = "Mínimo 6 caracteres", id = "password" })
+                        </div>
+                        @Html.ValidationMessageFor(m => m.Contrasena, "", new { @class = "text-danger small" })
+                        <div id="passwordStrength" class="password-strength"></div>
+                    </div>
+
+                    <!-- Confirmar Contraseña -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label required-field">@Html.DisplayNameFor(m => m.ConfirmarContrasena)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            @Html.PasswordFor(m => m.ConfirmarContrasena, new { @class = "form-control", placeholder = "Repite la contraseña", id = "confirmPassword" })
+                        </div>
+                        @Html.ValidationMessageFor(m => m.ConfirmarContrasena, "", new { @class = "text-danger small" })
+                    </div>
+                </div>
+
+                <!-- Términos y Condiciones -->
+                <div class="mb-4 form-check">
+                    @Html.CheckBoxFor(m => m.AceptarTerminos, new { @class = "form-check-input" })
+                    <label class="form-check-label">
+                        Acepto los <a href="#" class="text-decoration-none">términos y condiciones</a> del sistema
+                    </label>
+                    @Html.ValidationMessageFor(m => m.AceptarTerminos, "", new { @class = "text-danger small d-block" })
+                </div>
+
+                <!-- Botón de registro -->
+                <div class="d-grid gap-2 mb-3">
+                    <button type="submit" class="btn btn-primary btn-registro">
+                        <i class="fas fa-user-plus"></i> Crear Cuenta
+                    </button>
+                </div>
+
+                <div class="text-center">
+                    <p class="mb-0">
+                        ¿Ya tienes cuenta?
+                        @Html.ActionLink("Inicia sesión", "Login", "Account", null, new { @class = "text-decoration-none fw-bold" })
+                    </p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Indicador de fortaleza de contraseña
+        const passwordInput = document.getElementById('password');
+        if (passwordInput) {
+            passwordInput.addEventListener('input', function () {
+                const password = this.value;
+                const strengthDiv = document.getElementById('passwordStrength');
+
+                let strength = 0;
+                if (password.length >= 6) strength++;
+                if (password.length >= 10) strength++;
+                if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+                if (/\d/.test(password)) strength++;
+                if (/[^a-zA-Z0-9]/.test(password)) strength++;
+
+                const messages = ['Muy débil', 'Débil', 'Regular', 'Buena', 'Fuerte'];
+                const colors = ['text-danger', 'text-warning', 'text-info', 'text-success', 'text-success'];
+
+                if (password.length > 0) {
+                    strengthDiv.textContent = 'Fortaleza: ' + messages[Math.min(strength, 4)];
+                    strengthDiv.className = 'password-strength ' + colors[Math.min(strength, 4)];
+                } else {
+                    strengthDiv.textContent = '';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

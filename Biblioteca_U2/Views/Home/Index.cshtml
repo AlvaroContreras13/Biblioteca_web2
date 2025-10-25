@@ -1,0 +1,119 @@
+﻿@{
+    ViewBag.Title = "Inicio - Estudiante";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .welcome-card {
+            background: white;
+            border-radius: 20px;
+            padding: 60px;
+            margin: 100px auto;
+            max-width: 800px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .success-icon {
+            font-size: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        .user-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+            .btn-custom:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+                color: white;
+            }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-book-reader text-primary"></i>
+                <strong>Biblioteca UPT</strong>
+            </a>
+            <div class="ms-auto">
+                <a href="@Url.Action("Logout", "Account")" class="btn btn-outline-danger">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="container">
+        <div class="welcome-card">
+            <i class="fas fa-check-circle success-icon"></i>
+            <h1>¡Bienvenido, Estudiante!</h1>
+            <p class="lead text-muted">Has iniciado sesión correctamente</p>
+
+            <div class="user-info">
+                <h4><i class="fas fa-user text-primary"></i> Información de tu cuenta</h4>
+                <hr>
+                <p><strong>Nombre:</strong> @ViewBag.UserName</p>
+                <p><strong>Rol:</strong> <span class="badge bg-success">@ViewBag.UserRole</span></p>
+                <p><strong>ID de Usuario:</strong> @ViewBag.UserId</p>
+                <p><strong>Carrera:</strong> @ViewBag.UserCarrera</p>
+            </div>
+
+            <div class="alert alert-info mt-4">
+                <i class="fas fa-info-circle"></i>
+                <strong>Iniciaste sesión como ESTUDIANTE</strong>
+                <p class="mb-0 mt-2">Esta es tu página de inicio. Desde aquí podrás gestionar tus préstamos, buscar libros y más.</p>
+            </div>
+
+            <div class="mt-4">
+                <a href="#" class="btn btn-custom me-2">
+                    <i class="fas fa-book"></i> Buscar Libros
+                </a>
+                <a href="#" class="btn btn-custom">
+                    <i class="fas fa-user"></i> Mi Perfil
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+﻿@model Biblioteca_U2.Models.LoginViewModel
+
+@{
+    ViewBag.Title = "Iniciar Sesión";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Sistema de Biblioteca Universitaria</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            max-width: 900px;
+            width: 100%;
+            margin: 20px;
+        }
+
+        .login-left {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+            .login-left i {
+                font-size: 80px;
+                margin-bottom: 20px;
+            }
+
+            .login-left h2 {
+                margin-bottom: 15px;
+                font-weight: 600;
+            }
+
+        .login-right {
+            padding: 60px 40px;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+            .btn-login:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            }
+
+        .input-group-text {
+            background: transparent;
+            border-right: none;
+        }
+
+        .form-control {
+            border-left: none;
+        }
+
+        .alert {
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="row g-0">
+            <!-- Lado izquierdo -->
+            <div class="col-md-5 d-none d-md-block">
+                <div class="login-left">
+                    <i class="fas fa-book-reader"></i>
+                    <h2>Sistema de Biblioteca</h2>
+                    <p>Universidad</p>
+                    <p class="mt-3">Accede a miles de libros compartidos por estudiantes como tú</p>
+                </div>
+            </div>
+
+            <!-- Lado derecho - Formulario -->
+            <div class="col-md-7">
+                <div class="login-right">
+                    <h3 class="mb-4 text-center">Iniciar Sesión</h3>
+
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle"></i>
+                            @Html.ValidationSummary(true, "", new { @class = "mb-0" })
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @using (Html.BeginForm("Login", "Account", FormMethod.Post, new { @class = "needs-validation" }))
+                    {
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label class="form-label">Correo Electrónico</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "ejemplo@virtual.upt.pe", type = "email" })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger small" })
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Contraseña</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                @Html.PasswordFor(m => m.Contrasena, new { @class = "form-control", placeholder = "••••••••" })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.Contrasena, "", new { @class = "text-danger small" })
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            @Html.CheckBoxFor(m => m.RecordarMe, new { @class = "form-check-input" })
+                            @Html.LabelFor(m => m.RecordarMe, new { @class = "form-check-label" })
+                        </div>
+
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-primary btn-login">
+                                <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                            </button>
+                        </div>
+
+                        <div class="text-center">
+                            <p class="mb-0">
+                                ¿No tienes cuenta?
+                                @Html.ActionLink("Regístrate aquí", "Registro", "Account", null, new { @class = "text-decoration-none fw-bold" })
+                            </p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
