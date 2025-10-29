@@ -10,6 +10,8 @@ namespace Biblioteca_U2.Models
         public Model1()
             : base("name=Model1")
         {
+            this.Configuration.ProxyCreationEnabled = false; 
+            this.Configuration.LazyLoadingEnabled = false;  
         }
 
         public virtual DbSet<tbcalificacion> tbcalificacion { get; set; }

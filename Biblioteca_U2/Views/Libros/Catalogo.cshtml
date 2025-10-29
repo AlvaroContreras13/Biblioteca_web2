@@ -1,0 +1,205 @@
+﻿@model Biblioteca_U2.Models.CatalogoViewModel
+@{
+    ViewBag.Title = "Catálogo de Libros";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>@ViewBag.Title</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 'sans': ['Segoe UI', 'Poppins', 'sans-serif'] },
+                    colors: { 'purple-gradient-start': '#667eea', 'purple-gradient-end': '#764ba2' }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        /* 🔝 Cabecera fija */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+        }
+        /* Scroll suave */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+
+<body class="font-sans bg-gray-50">
+
+    <!-- 🔝 Header fijo -->
+    <header class="bg-white/90 shadow-md border-b-4 border-gradient-to-r from-purple-gradient-start to-purple-gradient-end">
+        <div class="max-w-7xl mx-auto px-4 flex justify-between items-center h-16">
+            <div class="flex items-center">
+                <i class="fas fa-book-open text-3xl text-purple-600 mr-3"></i>
+                <h1 class="text-2xl font-bold text-gray-800">Biblioteca UPT</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-gray-700 font-medium">Bienvenido, @Model.UsuarioNombre</span>
+                <a href="@Url.Action("Logout","Account")"
+                   class="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-2 rounded-lg font-semibold hover:from-purple-700 hover:to-purple-800 transition duration-300">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Salir
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 📚 Contenido principal -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-3xl font-bold text-gray-800">Catálogo de Libros</h2>
+                <p class="text-gray-600">Explora nuestra colección y aplica filtros de búsqueda</p>
+            </div>
+            <!-- 🧩 Botones de vista -->
+            <div class="flex space-x-2">
+                <button id="gridViewBtn" class="p-2 bg-purple-100 text-purple-700 rounded-lg shadow">
+                    <i class="fas fa-th-large"></i>
+                </button>
+                <button id="listViewBtn" class="p-2 bg-gray-100 text-gray-600 rounded-lg hover:text-purple-700 hover:bg-purple-50">
+                    <i class="fas fa-list"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- 🔍 Filtros -->
+        @using (Html.BeginForm("Catalogo", "Libros", FormMethod.Get))
+        {
+            <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 grid grid-cols-1 md:grid-cols-6 gap-4">
+                <input type="text" name="busqueda" value="@Model.Busqueda" placeholder="Buscar título o autor..."
+                       class="col-span-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" />
+
+                @Html.DropDownListFor(m => m.IdGenero, Model.Generos, "Todos los géneros",
+                    new { @class = "px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" })
+
+                @Html.DropDownListFor(m => m.IdCarrera, Model.Carreras, "Todas las carreras",
+                    new { @class = "px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" })
+
+                <select name="disponible" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                    <option value="">Todos</option>
+                    <option value="true" @(Model.Disponible == true ? "selected" : "")>Disponible</option>
+                    <option value="false" @(Model.Disponible == false ? "selected" : "")>Prestado</option>
+                </select>
+
+                <button type="submit" class="col-span-1 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold rounded-lg px-4 py-2 hover:from-purple-700 hover:to-purple-800 transition">
+                    <i class="fas fa-search mr-2"></i>Buscar
+                </button>
+            </div>
+        }
+
+        <!-- 🔢 Resultados -->
+        <p class="text-gray-600 font-medium mb-4">@Model.TotalResultados libros encontrados</p>
+
+        <div id="booksContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            @foreach (var libro in Model.Libros)
+            {
+                <div class="bookCard bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300">
+                    <div class="h-48 bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center">
+                        <i class="fas fa-book text-6xl text-purple-600"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="font-bold text-lg text-gray-800 mb-2">@libro.titulo</h3>
+                        <p class="text-gray-600 text-sm mb-1"><i class="fas fa-user-edit mr-1 text-purple-500"></i>@libro.autor</p>
+                        <p class="text-gray-500 text-xs mb-3">
+                            @(libro.tbcarrera != null ? libro.tbcarrera.nombre_carrera : "General")
+                        </p>
+
+                        @if (libro.disponible == true)
+                        {
+                            <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded-full inline-block mb-3">
+                                <i class="fas fa-check-circle mr-1"></i>Disponible
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded-full inline-block mb-3">
+                                <i class="fas fa-times-circle mr-1"></i>Prestado
+                            </span>
+                        }
+
+                        <div class="flex space-x-2">
+                            <button class="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 text-white py-2 px-3 rounded-lg text-sm font-semibold hover:from-purple-700 hover:to-purple-800 transition"
+                                    @(libro.disponible == true ? "" : "disabled")>
+                                <i class="fas fa-book-reader mr-1"></i>@(libro.disponible == true ? "Solicitar" : "No disponible")
+                            </button>
+                            <button class="flex-1 bg-gray-100 text-gray-700 py-2 px-3 rounded-lg text-sm font-semibold hover:bg-gray-200 transition">
+                                <i class="fas fa-bookmark mr-1"></i>Reservar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- ⚠️ Sin resultados -->
+        @if (!Model.Libros.Any())
+        {
+            <div class="text-center text-gray-500 mt-10">
+                <i class="fas fa-info-circle text-2xl mb-2"></i>
+                <p>No se encontraron libros con los criterios seleccionados.</p>
+            </div>
+        }
+
+        <!-- 📑 Paginación -->
+        <div class="flex justify-center items-center mt-10 space-x-2">
+            @if (Model.PaginaActual > 1)
+            {
+                <a href="@Url.Action("Catalogo", new { pagina = Model.PaginaActual - 1 })" class="px-3 py-2 text-gray-600 hover:text-purple-700">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            }
+
+            @for (int i = 1; i <= Model.TotalPaginas; i++)
+            {
+                if (i == Model.PaginaActual)
+                {
+                    <span class="px-4 py-2 bg-purple-600 text-white rounded-lg">@i</span>
+                }
+                else
+                {
+                    <a href="@Url.Action("Catalogo", new { pagina = i })" class="px-4 py-2 text-gray-600 hover:bg-purple-50 hover:text-purple-700 rounded-lg">@i</a>
+                }
+            }
+
+            @if (Model.PaginaActual < Model.TotalPaginas)
+            {
+                <a href="@Url.Action("Catalogo", new { pagina = Model.PaginaActual + 1 })" class="px-3 py-2 text-gray-600 hover:text-purple-700">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            }
+        </div>
+    </main>
+
+    <!-- 🧠 Script cambio de vista -->
+    <script>
+        const gridBtn = document.getElementById('gridViewBtn');
+        const listBtn = document.getElementById('listViewBtn');
+        const container = document.getElementById('booksContainer');
+
+        gridBtn.addEventListener('click', () => {
+            container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6';
+            gridBtn.classList.add('bg-purple-100', 'text-purple-700');
+            listBtn.classList.remove('bg-purple-100', 'text-purple-700');
+        });
+
+        listBtn.addEventListener('click', () => {
+            container.className = 'flex flex-col gap-4';
+            listBtn.classList.add('bg-purple-100', 'text-purple-700');
+            gridBtn.classList.remove('bg-purple-100', 'text-purple-700');
+        });
+    </script>
+
+</body>
+</html>
