@@ -36,5 +36,88 @@
 
     <script src="~/Scripts/jquery-1.10.2.min.js"></script>
     <script src="~/Scripts/bootstrap.min.js"></script>
-</body>
+
+
+    <!-- 🤖 Asistente Virtual (solo estudiantes) -->
+    @if (Session["Rol"] != null && Session["Rol"].ToString() == "Estudiante")
+    {
+        <div id="asistente-barra">
+            <div id="asistente-avatar">
+                <img src="~/Content/img/artificial.gif" alt="Asistente" />
+            </div>
+            <div id="asistente-texto">💬 ¡Hola! Soy tu asistente virtual. ¿Tienes alguna duda?</div>
+        </div>
+
+        <audio id="vozLucia" src="~/Content/audio/voz.wav" preload="auto"></audio>
+
+        <style>
+            #asistente-barra {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: linear-gradient(90deg, #667eea, #764ba2);
+                color: white;
+                font-size: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                padding: 10px 20px;
+                box-shadow: 0 -3px 10px rgba(0,0,0,0.3);
+                z-index: 10000;
+            }
+
+            #asistente-avatar {
+                margin-right: 15px;
+                animation: float 3s ease-in-out infinite;
+            }
+
+                #asistente-avatar img {
+                    width: 60px;
+                    height: 60px;
+                    border-radius: 50%;
+                }
+
+            #asistente-texto {
+                flex: 1;
+            }
+
+            @@keyframes float {
+                0%, 100% {
+                    transform: translateY(0px);
+                }
+
+                50% {
+                    transform: translateY(-5px);
+                }
+            }
+        </style>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const audio = document.getElementById("vozLucia");
+                const mensaje = "Hola, soy tu asistente virtual. Estoy aquí para ayudarte en cualquier duda que tengas.";
+
+                // Reproduce la voz grabada si el usuario permite sonido
+                const reproducir = () => {
+                    audio.play().catch(() => {
+                        document.addEventListener("click", () => {
+                            if (audio.paused) audio.play();
+                        }, { once: true });
+                    });
+                };
+                reproducir();
+
+                // También puedes usar voz sintética de respaldo
+                if ('speechSynthesis' in window) {
+                    const utter = new SpeechSynthesisUtterance(mensaje);
+                    utter.lang = 'es-ES';
+                    utter.rate = 1;
+                    utter.pitch = 1.1;
+                    speechSynthesis.speak(utter);
+                }
+            });
+        </script>
+    }
+    </body>
 </html>

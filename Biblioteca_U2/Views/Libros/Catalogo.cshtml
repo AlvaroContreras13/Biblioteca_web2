@@ -33,6 +33,80 @@
         html {
             scroll-behavior: smooth;
         }
+        /* 🤖 Asistente virtual flotante */
+        #chatBot {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        #chatWindow {
+            width: 300px;
+            max-height: 400px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #chatHeader {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 16px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #chatMessages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .message-user {
+            background: #e0e7ff;
+            color: #1e3a8a;
+            padding: 6px 10px;
+            border-radius: 12px;
+            max-width: 80%;
+            align-self: flex-end;
+            margin-bottom: 6px;
+        }
+
+        .message-bot {
+            background: #f3f4f6;
+            color: #111827;
+            padding: 6px 10px;
+            border-radius: 12px;
+            max-width: 80%;
+            align-self: flex-start;
+            margin-bottom: 6px;
+        }
+
+        #chatInputContainer {
+            display: flex;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        #chatInput {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            outline: none;
+        }
+
+        #sendBtn {
+            background: #667eea;
+            color: white;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -216,6 +290,98 @@
             listBtn.classList.add('bg-purple-100', 'text-purple-700');
             gridBtn.classList.remove('bg-purple-100', 'text-purple-700');
         });
+    </script>
+    <!-- 🤖 Asistente Virtual Flotante -->
+    <div id="chatBot">
+        <button id="chatBtn" class="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-lg flex items-center justify-center">
+            <i class="fas fa-robot text-2xl"></i>
+        </button>
+
+        <div id="chatWindow" class="flex flex-col">
+            <div id="chatHeader">
+                Asistente Virtual BookCicle
+                <button id="closeChat" class="text-white font-bold">&times;</button>
+            </div>
+            <div id="chatMessages">
+                <div class="message-bot">👋 ¡Hola! Soy tu asistente virtual. Pregúntame sobre libros, géneros o disponibilidad.</div>
+            </div>
+            <div id="chatInputContainer">
+                <input id="chatInput" type="text" placeholder="Escribe tu pregunta..." />
+                <button id="sendBtn">Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const chatBtn = document.getElementById('chatBtn');
+    const chatWindow = document.getElementById('chatWindow');
+    const closeChat = document.getElementById('closeChat');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatInput = document.getElementById('chatInput');
+    const chatMessages = document.getElementById('chatMessages');
+
+    // Abrir/cerrar chat
+    chatBtn.addEventListener('click', () => {
+        chatWindow.style.display = chatWindow.style.display === 'flex' ? 'none' : 'flex';
+    });
+    closeChat.addEventListener('click', () => chatWindow.style.display = 'none');
+
+    // Enviar mensaje
+    sendBtn.addEventListener('click', async () => {
+        const msg = chatInput.value.trim();
+        if (!msg) return;
+
+        // Mostrar mensaje del usuario
+        const userMsg = document.createElement('div');
+        userMsg.className = 'message-user';
+        userMsg.textContent = msg;
+        chatMessages.appendChild(userMsg);
+
+        chatInput.value = '';
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // Mostrar indicador de "escribiendo..."
+        const typingMsg = document.createElement('div');
+        typingMsg.className = 'message-bot';
+        typingMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Escribiendo...';
+        typingMsg.id = 'typingIndicator';
+        chatMessages.appendChild(typingMsg);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        try {
+            // Llamar al backend
+            const response = await fetch('@Url.Action("SendMessage", "ChatBot")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `message=${encodeURIComponent(msg)}`
+            });
+
+            const data = await response.json();
+
+            // Eliminar indicador de "escribiendo..."
+            document.getElementById('typingIndicator')?.remove();
+
+            // Mostrar respuesta del bot
+            const botMsg = document.createElement('div');
+            botMsg.className = 'message-bot';
+            botMsg.textContent = data.respuesta || 'No se recibió respuesta.';
+            chatMessages.appendChild(botMsg);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        } catch (error) {
+            document.getElementById('typingIndicator')?.remove();
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'message-bot';
+            errorMsg.textContent = '⚠️ Error al conectar con el asistente.';
+            chatMessages.appendChild(errorMsg);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    });
+
+    // Enviar con Enter
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendBtn.click();
+    });
     </script>
 
 </body>
