@@ -1,0 +1,280 @@
+@model List<Biblioteca_U2.Models.tbprestamo>
+@{
+    ViewBag.Title = "Historial de Préstamos";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>@ViewBag.Title</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 'sans': ['Segoe UI', 'Poppins', 'sans-serif'] },
+                    colors: { 'purple-gradient-start': '#667eea', 'purple-gradient-end': '#764ba2' }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+
+<body class="font-sans bg-gray-50">
+
+    <!-- 🔝 Header fijo -->
+    <header class="bg-white/90 shadow-md border-b-4 border-gradient-to-r from-purple-gradient-start to-purple-gradient-end">
+        <div class="max-w-7xl mx-auto px-4 flex justify-between items-center h-16">
+            <div class="flex items-center">
+                <i class="fas fa-user-shield text-3xl text-purple-600 mr-3"></i>
+                <h1 class="text-2xl font-bold text-gray-800">Panel Administrador</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="@Url.Action("Registrar","Libros")" class="text-gray-700 hover:text-purple-600 font-medium transition">
+                    <i class="fas fa-plus-circle mr-2"></i>Registrar Libro
+                </a>
+                <a href="@Url.Action("SolicitudesPendientes","Prestamos")" class="text-gray-700 hover:text-purple-600 font-medium transition">
+                    <i class="fas fa-clock mr-2"></i>Solicitudes
+                </a>
+                <a href="@Url.Action("PrestamosActivos","Prestamos")" class="text-gray-700 hover:text-purple-600 font-medium transition">
+                    <i class="fas fa-book-reader mr-2"></i>Préstamos
+                </a>
+                <a href="@Url.Action("HistorialPrestamos","Prestamos")" class="text-purple-600 font-semibold">
+                    <i class="fas fa-history mr-2"></i>Historial
+                </a>
+                <span class="text-gray-700 font-medium">@Session["UserName"]</span>
+                <a href="@Url.Action("Logout","Account")" class="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-2 rounded-lg font-semibold hover:from-purple-700 hover:to-purple-800 transition duration-300">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Salir
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 📚 Contenido principal -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+
+        <!-- Mensajes -->
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-lg">
+                <i class="fas fa-check-circle mr-2"></i>@TempData["SuccessMessage"]
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-lg">
+                <i class="fas fa-exclamation-circle mr-2"></i>@TempData["ErrorMessage"]
+            </div>
+        }
+
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">
+                <i class="fas fa-history text-purple-600 mr-2"></i>Historial de Préstamos
+            </h2>
+            <p class="text-gray-600">Registro completo de todos los préstamos realizados</p>
+        </div>
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gradient-to-r from-purple-600 to-purple-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Libro</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Prestatario</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Fechas</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Duración</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Estado</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Condición</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach (var prestamo in Model)
+                            {
+                                var estadoClass = "";
+                                var estadoIcon = "";
+                                var estadoText = "";
+
+                                if (prestamo.estado == "completado")
+                                {
+                                    estadoClass = "bg-green-100 text-green-800";
+                                    estadoIcon = "fa-check-circle";
+                                    estadoText = "Completado";
+                                }
+                                else if (prestamo.estado == "activo")
+                                {
+                                    estadoClass = "bg-blue-100 text-blue-800";
+                                    estadoIcon = "fa-book-reader";
+                                    estadoText = "Activo";
+                                }
+                                else if (prestamo.estado == "retrasado")
+                                {
+                                    estadoClass = "bg-red-100 text-red-800";
+                                    estadoIcon = "fa-exclamation-triangle";
+                                    estadoText = "Retrasado";
+                                }
+                                else
+                                {
+                                    estadoClass = "bg-gray-100 text-gray-800";
+                                    estadoIcon = "fa-times-circle";
+                                    estadoText = prestamo.estado;
+                                }
+
+                                <tr class="hover:bg-gray-50 transition">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-purple-600">#@prestamo.id_prestamo</div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-book text-purple-600"></i>
+                                            </div>
+                                            <div class="ml-3">
+                                                <div class="text-sm font-medium text-gray-900">@prestamo.tblibro.titulo</div>
+                                                <div class="text-xs text-gray-500">@prestamo.tblibro.autor</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm font-medium text-gray-900">
+                                            @prestamo.tbusuario2.nombre @prestamo.tbusuario2.apellido
+                                        </div>
+                                        <div class="text-xs text-gray-500">@prestamo.tbusuario2.codigo_identificacion</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-xs text-gray-900">
+                                            <i class="fas fa-calendar-check mr-1 text-green-500"></i>
+                                            @prestamo.fecha_entrega?.ToString("dd/MM/yyyy")
+                                        </div>
+                                        @if (prestamo.fecha_devolucion_real != null)
+                                        {
+                                            <div class="text-xs text-gray-900">
+                                                <i class="fas fa-calendar-times mr-1 text-red-500"></i>
+                                                @prestamo.fecha_devolucion_real?.ToString("dd/MM/yyyy")
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="text-xs text-gray-500">
+                                                <i class="fas fa-calendar-times mr-1"></i>
+                                                Prevista: @prestamo.fecha_prevista_devolucion.ToString("dd/MM/yyyy")
+                                            </div>
+                                        }
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">@(prestamo.dias_prestamo ?? 0) días</div>
+                                        @if (prestamo.numero_renovaciones > 0)
+                                        {
+                                            <div class="text-xs text-blue-600">
+                                                <i class="fas fa-redo mr-1"></i>@prestamo.numero_renovaciones renovaciones
+                                            </div>
+                                        }
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full @estadoClass">
+                                            <i class="fas @estadoIcon mr-1"></i>@estadoText
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @if (!string.IsNullOrEmpty(prestamo.condicion_devolucion))
+                                        {
+                                            var condicionClass = "";
+                                            if (prestamo.condicion_devolucion == "Excelente") { condicionClass = "bg-green-100 text-green-800"; }
+                                            else if (prestamo.condicion_devolucion == "Muy bueno") { condicionClass = "bg-blue-100 text-blue-800"; }
+                                            else if (prestamo.condicion_devolucion == "Bueno") { condicionClass = "bg-yellow-100 text-yellow-800"; }
+                                            else if (prestamo.condicion_devolucion == "Regular") { condicionClass = "bg-orange-100 text-orange-800"; }
+                                            else if (prestamo.condicion_devolucion == "Dañado") { condicionClass = "bg-red-100 text-red-800"; }
+
+                                            <span class="px-2 py-1 text-xs font-semibold rounded @condicionClass">
+                                                @prestamo.condicion_devolucion
+                                            </span>
+
+                                            if (!string.IsNullOrEmpty(prestamo.descripcion_danio))
+                                            {
+                                                <div class="text-xs text-gray-500 mt-1" title="@prestamo.descripcion_danio">
+                                                    <i class="fas fa-comment-dots"></i>
+                                                </div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-xs text-gray-400">-</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Paginación -->
+            <!-- Paginación -->
+            if (ViewBag.TotalPaginas > 1)
+            {
+                <div class="flex justify-center items-center mt-6 space-x-2">
+                    @if (ViewBag.PaginaActual > 1)
+                    {
+                        <a href="@Url.Action("HistorialPrestamos", new { pagina = ViewBag.PaginaActual - 1 })"
+                           class="px-3 py-2 text-gray-600 hover:text-purple-700 transition">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    }
+
+                    @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+                    {
+                        if (i == ViewBag.PaginaActual)
+                        {
+                            <span class="px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold">@i</span>
+                        }
+                        else
+                        {
+                            <a href="@Url.Action("HistorialPrestamos", new { pagina = i })"
+                               class="px-4 py-2 text-gray-600 hover:bg-purple-50 hover:text-purple-700 rounded-lg transition">
+                                @i
+                            </a>
+                        }
+                    }
+
+                    @if (ViewBag.PaginaActual < ViewBag.TotalPaginas)
+                    {
+                        <a href="@Url.Action("HistorialPrestamos", new { pagina = ViewBag.PaginaActual + 1 })"
+                           class="px-3 py-2 text-gray-600 hover:text-purple-700 transition">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="bg-white rounded-lg shadow-lg p-12 text-center">
+                <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-600 mb-2">No hay préstamos registrados</h3>
+                <p class="text-gray-500">El historial está vacío</p>
+            </div>
+        }
+
+    </main>
+
+</body>
+</html>

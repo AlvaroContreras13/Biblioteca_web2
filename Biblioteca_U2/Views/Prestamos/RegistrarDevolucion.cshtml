@@ -1,0 +1,229 @@
+@model Biblioteca_U2.Models.tbprestamo
+@{
+    ViewBag.Title = "Registrar Devolución";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+
+
+    <title>@ViewBag.Title</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 'sans': ['Segoe UI', 'Poppins', 'sans-serif'] },
+                    colors: { 'purple-gradient-start': '#667eea', 'purple-gradient-end': '#764ba2' }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+
+<body class="font-sans bg-gray-50">
+
+    <!-- 🔝 Header fijo -->
+    <header class="bg-white/90 shadow-md border-b-4 border-gradient-to-r from-purple-gradient-start to-purple-gradient-end">
+        <div class="max-w-7xl mx-auto px-4 flex justify-between items-center h-16">
+            <div class="flex items-center">
+                <i class="fas fa-user-shield text-3xl text-purple-600 mr-3"></i>
+                <h1 class="text-2xl font-bold text-gray-800">Panel Administrador</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="@Url.Action("PrestamosActivos","Prestamos")" class="text-gray-700 hover:text-purple-600 font-medium transition">
+                    <i class="fas fa-arrow-left mr-2"></i>Volver a Préstamos
+                </a>
+                <span class="text-gray-700 font-medium">@Session["UserName"]</span>
+                <a href="@Url.Action("Logout","Account")" class="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-2 rounded-lg font-semibold hover:from-purple-700 hover:to-purple-800 transition duration-300">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Salir
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 📚 Contenido principal -->
+    <main class="max-w-4xl mx-auto px-4 py-8">
+
+        <!-- Mensajes -->
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-lg">
+                <i class="fas fa-exclamation-circle mr-2"></i>@TempData["ErrorMessage"]
+            </div>
+        }
+
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">
+                <i class="fas fa-undo text-green-600 mr-2"></i>Registrar Devolución
+            </h2>
+            <p class="text-gray-600">Registra la devolución del libro y evalúa su condición</p>
+        </div>
+
+        <!-- Información del Préstamo -->
+        @if (Model != null)
+        {
+            var diasPrestamo = Model.dias_prestamo ?? 0;
+            var esRetrasado = Model.estado == "retrasado";
+
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-info-circle text-blue-500 mr-2"></i>Información del Préstamo
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Libro -->
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-700 mb-3 flex items-center">
+                            <i class="fas fa-book text-purple-600 mr-2"></i>Libro
+                        </h4>
+                        <p class="text-lg font-bold text-gray-900">@Model.tblibro.titulo</p>
+                        <p class="text-sm text-gray-600">@Model.tblibro.autor</p>
+                        <p class="text-xs text-gray-500 mt-1">Código: @Model.tblibro.codigo_referencia</p>
+                        <div class="mt-2">
+                            <span class="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded">
+                                Condición al prestar: @Model.tblibro.condicion
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Prestatario -->
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-700 mb-3 flex items-center">
+                            <i class="fas fa-user text-blue-600 mr-2"></i>Prestatario
+                        </h4>
+                        <p class="text-lg font-bold text-gray-900">@Model.tbusuario2.nombre @Model.tbusuario2.apellido</p>
+                        <p class="text-sm text-gray-600">@Model.tbusuario2.email</p>
+                        <p class="text-xs text-gray-500 mt-1">Código: @Model.tbusuario2.codigo_identificacion</p>
+                    </div>
+
+                    <!-- Fechas -->
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-700 mb-3 flex items-center">
+                            <i class="fas fa-calendar text-green-600 mr-2"></i>Fechas
+                        </h4>
+                        <p class="text-sm text-gray-700">
+                            <strong>Entrega:</strong> @Model.fecha_entrega?.ToString("dd/MM/yyyy")
+                        </p>
+                        <p class="text-sm text-gray-700">
+                            <strong>Devolución prevista:</strong> @Model.fecha_prevista_devolucion.ToString("dd/MM/yyyy")
+                        </p>
+                        <p class="text-sm text-gray-700">
+                            <strong>Días transcurridos:</strong> @diasPrestamo días
+                        </p>
+                        @if (Model.numero_renovaciones > 0)
+                        {
+                            <p class="text-xs text-blue-600 mt-2">
+                                <i class="fas fa-redo mr-1"></i>Renovado @Model.numero_renovaciones veces
+                            </p>
+                        }
+                    </div>
+
+                    <!-- Estado -->
+                    <div class="bg-gradient-to-br from-@(esRetrasado ? "red" : "yellow")-50 to-@(esRetrasado ? "red" : "yellow")-100 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-700 mb-3 flex items-center">
+                            <i class="fas fa-info-circle text-@(esRetrasado ? "red" : "yellow")-600 mr-2"></i>Estado
+                        </h4>
+                        @if (esRetrasado)
+                        {
+                            var diasRetraso = (DateTime.Now - Model.fecha_prevista_devolucion).Days;
+                            <p class="text-lg font-bold text-red-700">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>RETRASADO
+                            </p>
+                            <p class="text-sm text-red-600">@diasRetraso días de retraso</p>
+                        }
+                        else
+                        {
+                            <p class="text-lg font-bold text-green-700">
+                                <i class="fas fa-check-circle mr-2"></i>A TIEMPO
+                            </p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario de Devolución -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-clipboard-check text-green-600 mr-2"></i>Evaluación de Devolución
+                </h3>
+
+                @using (Html.BeginForm("ProcesarDevolucion", "Prestamos", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="idPrestamo" value="@Model.id_prestamo" />
+
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">
+                            <i class="fas fa-star text-yellow-500 mr-2"></i>Condición del libro devuelto *
+                        </label>
+                        <select name="condicionDevolucion" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="">-- Seleccione una condición --</option>
+                            <option value="Excelente">⭐ Excelente - Sin desgaste visible</option>
+                            <option value="Muy bueno">👍 Muy bueno - Mínimo desgaste</option>
+                            <option value="Bueno">✔️ Bueno - Desgaste normal</option>
+                            <option value="Regular">⚠️ Regular - Desgaste notable</option>
+                            <option value="Dañado">❌ Dañado - Deterioro significativo</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-gray-700 font-semibold mb-2">
+                            <i class="fas fa-comment-dots text-blue-500 mr-2"></i>Descripción de daños (si aplica)
+                        </label>
+                        <textarea name="descripcionDanio" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Describa cualquier daño, manchas, páginas dobladas, etc. Dejar en blanco si el libro está en perfectas condiciones."></textarea>
+                        <p class="text-xs text-gray-500 mt-1">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Este campo es importante para llevar un registro del estado de los libros
+                        </p>
+                    </div>
+
+                    <!-- Advertencia si está retrasado -->
+                    if (esRetrasado)
+                    {
+                        <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-exclamation-triangle text-yellow-500 text-xl"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-yellow-700">
+                                        <strong>Nota:</strong> Este préstamo está retrasado. Considere aplicar las políticas correspondientes según el reglamento de la biblioteca.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="flex space-x-4">
+                        <a href="@Url.Action("PrestamosActivos")" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-lg font-semibold text-center transition">
+                            <i class="fas fa-times mr-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-700 hover:to-green-800 transition"
+                                onclick="return confirm('¿Confirmar la devolución de este libro?')">
+                            <i class="fas fa-check mr-2"></i>Registrar Devolución
+                        </button>
+                    </div>
+                }
+            </div>
+        }
+
+    </main>
+
+</body>
+</html>

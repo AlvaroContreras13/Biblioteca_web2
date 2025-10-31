@@ -1,0 +1,211 @@
+@model List<Biblioteca_U2.Models.tbsolicitud_prestamo>
+@{
+    ViewBag.Title = "Solicitudes de Préstamo Pendientes";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+
+
+    <title>@ViewBag.Title</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 'sans': ['Segoe UI', 'Poppins', 'sans-serif'] },
+                    colors: { 'purple-gradient-start': '#667eea', 'purple-gradient-end': '#764ba2' }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+
+<body class="font-sans bg-gray-50">
+
+    <!-- 🔝 Header fijo -->
+    <header class="bg-white/90 shadow-md border-b-4 border-gradient-to-r from-purple-gradient-start to-purple-gradient-end">
+        <div class="max-w-7xl mx-auto px-4 flex justify-between items-center h-16">
+            <div class="flex items-center">
+                <i class="fas fa-user-shield text-3xl text-purple-600 mr-3"></i>
+                <h1 class="text-2xl font-bold text-gray-800">Panel Administrador</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="@Url.Action("Registrar","Libros")" class="text-gray-700 hover:text-purple-600 font-medium transition">
+                    <i class="fas fa-plus-circle mr-2"></i>Registrar Libro
+                </a>
+                <a href="@Url.Action("SolicitudesPendientes","Prestamos")" class="text-purple-600 font-semibold">
+                    <i class="fas fa-clock mr-2"></i>Solicitudes
+                </a>
+                <a href="@Url.Action("PrestamosActivos","Prestamos")" class="text-gray-700 hover:text-purple-600 font-medium transition">
+                    <i class="fas fa-book-reader mr-2"></i>Préstamos
+                </a>
+                <a href="@Url.Action("HistorialPrestamos","Prestamos")" class="text-gray-700 hover:text-purple-600 font-medium transition">
+                    <i class="fas fa-history mr-2"></i>Historial
+                </a>
+                <span class="text-gray-700 font-medium">@Session["UserName"]</span>
+                <a href="@Url.Action("Logout","Account")" class="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-2 rounded-lg font-semibold hover:from-purple-700 hover:to-purple-800 transition duration-300">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Salir
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 📚 Contenido principal -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+
+        <!-- Mensajes -->
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-lg">
+                <i class="fas fa-check-circle mr-2"></i>@TempData["SuccessMessage"]
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-lg">
+                <i class="fas fa-exclamation-circle mr-2"></i>@TempData["ErrorMessage"]
+            </div>
+        }
+
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">
+                <i class="fas fa-clock text-yellow-500 mr-2"></i>Solicitudes de Préstamo Pendientes
+            </h2>
+            <p class="text-gray-600">Revisa y procesa las solicitudes de los estudiantes</p>
+        </div>
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gradient-to-r from-purple-600 to-purple-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Libro</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Solicitante</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Fecha Solicitud</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Estado</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach (var solicitud in Model)
+                        {
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-12 w-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-book text-purple-600 text-xl"></i>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">@solicitud.tblibro.titulo</div>
+                                            <div class="text-sm text-gray-500">@solicitud.tblibro.autor</div>
+                                            <div class="text-xs text-gray-400">@solicitud.tblibro.tbgenero.nombre_genero</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        @solicitud.tbusuario1.nombre @solicitud.tbusuario1.apellido
+                                    </div>
+                                    <div class="text-sm text-gray-500">@solicitud.tbusuario1.email</div>
+                                    <div class="text-xs text-gray-400">@solicitud.tbusuario1.codigo_identificacion</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">
+                                        <i class="fas fa-calendar mr-1 text-purple-500"></i>
+                                        @solicitud.fecha_solicitud?.ToString("dd/MM/yyyy")
+                                    </div>
+                                    <div class="text-xs text-gray-500">@solicitud.fecha_solicitud?.ToString("HH:mm")</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                        <i class="fas fa-hourglass-half mr-1"></i>Pendiente
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center space-x-2">
+                                    @using (Html.BeginForm("AprobarSolicitud", "Prestamos", FormMethod.Post, new { @class = "inline" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="idSolicitud" value="@solicitud.id_solicitud" />
+                                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                                                onclick="return confirm('¿Aprobar esta solicitud y crear el préstamo?')">
+                                            <i class="fas fa-check mr-1"></i>Aprobar
+                                        </button>
+                                    }
+                                    <button type="button" onclick="mostrarRechazo(@solicitud.id_solicitud)" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
+                                        <i class="fas fa-times mr-1"></i>Rechazar
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="bg-white rounded-lg shadow-lg p-12 text-center">
+                <i class="fas fa-check-circle text-6xl text-green-300 mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-600 mb-2">No hay solicitudes pendientes</h3>
+                <p class="text-gray-500">Todas las solicitudes han sido procesadas</p>
+            </div>
+        }
+
+    </main>
+
+    <!-- Modal Rechazar -->
+    <div id="modalRechazo" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-times-circle text-red-500 mr-2"></i>Rechazar Solicitud
+            </h3>
+            @using (Html.BeginForm("RechazarSolicitud", "Prestamos", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="idSolicitudRechazo" name="idSolicitud" value="" />
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-semibold mb-2">Motivo del rechazo *</label>
+                    <textarea name="motivoRechazo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500" rows="4" placeholder="Ingrese el motivo del rechazo..."></textarea>
+                </div>
+                <div class="flex space-x-3">
+                    <button type="button" onclick="cerrarRechazo()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg font-semibold transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition">
+                        <i class="fas fa-times mr-2"></i>Rechazar
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <script>
+        function mostrarRechazo(idSolicitud) {
+            document.getElementById('idSolicitudRechazo').value = idSolicitud;
+            document.getElementById('modalRechazo').classList.remove('hidden');
+        }
+
+        function cerrarRechazo() {
+            document.getElementById('modalRechazo').classList.add('hidden');
+        }
+    </script>
+
+</body>
+</html>

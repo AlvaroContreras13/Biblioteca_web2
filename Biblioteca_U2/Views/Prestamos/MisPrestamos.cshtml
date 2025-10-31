@@ -1,0 +1,218 @@
+@model List<Biblioteca_U2.Models.tbprestamo>
+@{
+    ViewBag.Title = "Mis Préstamos";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>@ViewBag.Title</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 'sans': ['Segoe UI', 'Poppins', 'sans-serif'] },
+                    colors: { 'purple-gradient-start': '#667eea', 'purple-gradient-end': '#764ba2' }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+
+<body class="font-sans bg-gray-50">
+
+    <!-- 🔝 Header fijo -->
+    <header class="bg-white/90 shadow-md border-b-4 border-gradient-to-r from-purple-gradient-start to-purple-gradient-end">
+        <div class="max-w-7xl mx-auto px-4 flex justify-between items-center h-16">
+            <div class="flex items-center">
+                <i class="fas fa-book-open text-3xl text-purple-600 mr-3"></i>
+                <h1 class="text-2xl font-bold text-gray-800">Biblioteca UPT</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="@Url.Action("Catalogo","Libros")"
+                   class="text-gray-700 hover:text-purple-600 font-medium transition">
+                    <i class="fas fa-book mr-2"></i>Catálogo
+                </a>
+                <a href="@Url.Action("MisPrestamos","Prestamos")"
+                   class="text-purple-600 font-semibold">
+                    <i class="fas fa-bookmark mr-2"></i>Mis Préstamos
+                </a>
+                <span class="text-gray-700 font-medium">@Session["UserName"]</span>
+                <a href="@Url.Action("Logout","Account")"
+                   class="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-2 rounded-lg font-semibold hover:from-purple-700 hover:to-purple-800 transition duration-300">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Salir
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 📚 Contenido principal -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+
+        <!-- Mensajes -->
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-lg">
+                <i class="fas fa-check-circle mr-2"></i>@TempData["SuccessMessage"]
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-lg">
+                <i class="fas fa-exclamation-circle mr-2"></i>@TempData["ErrorMessage"]
+            </div>
+        }
+
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Mis Préstamos</h2>
+            <p class="text-gray-600">Gestiona tus préstamos activos y solicitudes pendientes</p>
+        </div>
+
+        <!-- 📋 Solicitudes Pendientes -->
+        @if (ViewBag.Solicitudes != null && ((List<Biblioteca_U2.Models.tbsolicitud_prestamo>)ViewBag.Solicitudes).Any())
+        {
+            <div class="mb-8">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-clock text-yellow-500 mr-2"></i>Solicitudes Pendientes
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @foreach (var solicitud in (List<Biblioteca_U2.Models.tbsolicitud_prestamo>)ViewBag.Solicitudes)
+                    {
+                        <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-yellow-500">
+                            <h4 class="font-bold text-lg text-gray-800 mb-2">@solicitud.tblibro.titulo</h4>
+                            <p class="text-gray-600 text-sm mb-1">
+                                <i class="fas fa-user-edit text-purple-500 mr-1"></i>@solicitud.tblibro.autor
+                            </p>
+                            <p class="text-gray-500 text-xs mb-3">
+                                <i class="fas fa-calendar text-purple-500 mr-1"></i>
+                                Solicitado: @solicitud.fecha_solicitud?.ToString("dd/MM/yyyy HH:mm")
+                            </p>
+                            <span class="bg-yellow-100 text-yellow-800 text-xs font-semibold px-3 py-1 rounded-full">
+                                <i class="fas fa-hourglass-half mr-1"></i>En revisión
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- 📚 Préstamos Activos -->
+        <h3 class="text-2xl font-bold text-gray-800 mb-4">
+            <i class="fas fa-book-reader text-purple-600 mr-2"></i>Préstamos Activos
+        </h3>
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="grid grid-cols-1 gap-4">
+                @foreach (var prestamo in Model)
+                {
+                    var diasRestantes = (prestamo.fecha_prevista_devolucion - DateTime.Now).TotalDays;
+                    var esRetrasado = prestamo.estado == "retrasado";
+                    var esPorVencer = diasRestantes <= 3 && diasRestantes > 0;
+
+                    <div class="bg-white rounded-lg shadow-lg p-6 @(esRetrasado ? "border-l-4 border-red-500" : esPorVencer ? "border-l-4 border-yellow-500" : "border-l-4 border-green-500")">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                            <div class="flex-1 mb-4 md:mb-0">
+                                <h4 class="font-bold text-xl text-gray-800 mb-2">@prestamo.tblibro.titulo</h4>
+                                <p class="text-gray-600 mb-1">
+                                    <i class="fas fa-user-edit text-purple-500 mr-1"></i>@prestamo.tblibro.autor
+                                </p>
+                                <p class="text-gray-500 text-sm mb-2">
+                                    <i class="fas fa-user text-purple-500 mr-1"></i>
+                                    Donado por: @prestamo.tbusuario3.nombre @prestamo.tbusuario3.apellido
+                                </p>
+                                <div class="flex flex-wrap gap-2 mt-3">
+                                    <span class="text-xs text-gray-600">
+                                        <i class="fas fa-calendar-check mr-1"></i>
+                                        Entrega: @prestamo.fecha_entrega?.ToString("dd/MM/yyyy")
+                                    </span>
+                                    <span class="text-xs text-gray-600">
+                                        <i class="fas fa-calendar-times mr-1"></i>
+                                        Devolución: @prestamo.fecha_prevista_devolucion.ToString("dd/MM/yyyy")
+                                    </span>
+                                    @if (prestamo.numero_renovaciones > 0)
+                                    {
+                                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                            <i class="fas fa-redo mr-1"></i>Renovaciones: @prestamo.numero_renovaciones/2
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col items-end space-y-3">
+                                <!-- Estado -->
+                                @if (esRetrasado)
+                                {
+                                    <span class="bg-red-100 text-red-800 font-semibold px-4 py-2 rounded-full text-sm">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i>Retrasado (@Math.Abs((int)diasRestantes) días)
+                                    </span>
+                                }
+                                else if (esPorVencer)
+                                {
+                                    <span class="bg-yellow-100 text-yellow-800 font-semibold px-4 py-2 rounded-full text-sm">
+                                        <i class="fas fa-clock mr-1"></i>Por vencer (@((int)diasRestantes) días)
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="bg-green-100 text-green-800 font-semibold px-4 py-2 rounded-full text-sm">
+                                        <i class="fas fa-check-circle mr-1"></i>Activo (@((int)diasRestantes) días)
+                                    </span>
+                                }
+
+                                <!-- Botón renovar -->
+                                @if (prestamo.numero_renovaciones < 2)
+                                {
+                                    using (Html.BeginForm("SolicitarRenovacion", "Prestamos", FormMethod.Post))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="idPrestamo" value="@prestamo.id_prestamo" />
+                                        <button type="submit" class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition text-sm">
+                                            <i class="fas fa-redo mr-2"></i>Renovar (14 días)
+                                        </button>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-gray-500 text-sm italic">
+                                        <i class="fas fa-info-circle mr-1"></i>Límite de renovaciones alcanzado
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="bg-white rounded-lg shadow-lg p-12 text-center">
+                <i class="fas fa-book-open text-6xl text-gray-300 mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-600 mb-2">No tienes préstamos activos</h3>
+                <p class="text-gray-500 mb-6">Explora el catálogo y solicita tu primer libro</p>
+                <a href="@Url.Action("Catalogo","Libros")" class="inline-block bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-purple-800 transition">
+                    <i class="fas fa-search mr-2"></i>Ir al Catálogo
+                </a>
+            </div>
+        }
+
+    </main>
+
+</body>
+</html>

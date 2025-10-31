@@ -46,6 +46,10 @@
                 <h1 class="text-2xl font-bold text-gray-800">Biblioteca UPT</h1>
             </div>
             <div class="flex items-center space-x-4">
+                <a href="@Url.Action("MisPrestamos","Prestamos")"
+                   class="text-gray-700 hover:text-purple-600 font-medium transition">
+                    <i class="fas fa-bookmark mr-2"></i>Mis Préstamos
+                </a>
                 <span class="text-gray-700 font-medium">Bienvenido, @Model.UsuarioNombre</span>
                 <a href="@Url.Action("Logout","Account")"
                    class="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-2 rounded-lg font-semibold hover:from-purple-700 hover:to-purple-800 transition duration-300">
@@ -130,10 +134,23 @@
                         }
 
                         <div class="flex space-x-2">
-                            <button class="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 text-white py-2 px-3 rounded-lg text-sm font-semibold hover:from-purple-700 hover:to-purple-800 transition"
-                                    @(libro.disponible == true ? "" : "disabled")>
-                                <i class="fas fa-book-reader mr-1"></i>@(libro.disponible == true ? "Solicitar" : "No disponible")
-                            </button>
+                            @if (libro.disponible == true)
+                            {
+                                using (Html.BeginForm("SolicitarPrestamo", "Prestamos", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="idLibro" value="@libro.id_libro" />
+                                    <button type="submit" class="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 text-white py-2 px-3 rounded-lg text-sm font-semibold hover:from-purple-700 hover:to-purple-800 transition">
+                                        <i class="fas fa-book-reader mr-1"></i>Solicitar
+                                    </button>
+                                }
+                            }
+                            else
+                            {
+                                <button disabled class="flex-1 bg-gray-400 text-white py-2 px-3 rounded-lg text-sm font-semibold cursor-not-allowed">
+                                    <i class="fas fa-times-circle mr-1"></i>No disponible
+                                </button>
+                            }
                             <button class="flex-1 bg-gray-100 text-gray-700 py-2 px-3 rounded-lg text-sm font-semibold hover:bg-gray-200 transition">
                                 <i class="fas fa-bookmark mr-1"></i>Reservar
                             </button>

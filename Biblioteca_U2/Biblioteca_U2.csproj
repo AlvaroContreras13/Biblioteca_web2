@@ -106,6 +106,7 @@
     <Compile Include="Controllers\AdminController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\LibrosController.cs" />
+    <Compile Include="Controllers\PrestamosController.cs" />
     <Compile Include="Filters\AuthorizeUserAttribute.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -135,6 +136,11 @@
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Views\Libros\Registrar.cshtml" />
+    <Content Include="Views\Prestamos\HistorialPrestamos.cshtml" />
+    <Content Include="Views\Prestamos\MisPrestamos.cshtml" />
+    <Content Include="Views\Prestamos\PrestamosActivos.cshtml" />
+    <Content Include="Views\Prestamos\RegistrarDevolucion.cshtml" />
+    <Content Include="Views\Prestamos\SolicitudesPendientes.cshtml" />
     <Content Include="Views\Libros\Catalogo.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
