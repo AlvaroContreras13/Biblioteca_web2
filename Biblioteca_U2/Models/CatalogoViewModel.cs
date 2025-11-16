@@ -14,6 +14,9 @@ namespace Biblioteca_U2.Models
 
         public List<tblibro> Libros { get; set; }
         public string UsuarioNombre { get; set; }
+        
+        // 💰 Sistema de créditos y gamificación
+        public int? CreditosUsuario { get; set; }
 
         // 🔢 Paginación
         public int PaginaActual { get; set; }

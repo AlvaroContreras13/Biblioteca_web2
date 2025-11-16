@@ -122,6 +122,7 @@ namespace Biblioteca_U2.Controllers
                 Carreras = new SelectList(db.tbcarrera.ToList(), "id_carrera", "nombre_carrera"),
                 Libros = libros,
                 UsuarioNombre = $"{usuario.nombre} {usuario.apellido}",
+                CreditosUsuario = usuario.creditos_disponibles, // 💰 Agregar créditos
                 PaginaActual = pagina,
                 TotalPaginas = (int)Math.Ceiling((double)totalRegistros / registrosPorPagina),
                 TotalResultados = totalRegistros

@@ -90,7 +90,7 @@ namespace Biblioteca_U2.Controllers
                     .Include(p => p.tblibro)
                     .Include(p => p.tbusuario3) // donador
                     .Where(p => p.id_usuario_prestatario == userId &&
-                               (p.estado == "activo" || p.estado == "retrasado")) // CAMBIO: "Prestado" → "activo"
+                               (p.estado == "activo" || p.estado == "retrasado"))
                     .OrderBy(p => p.fecha_prevista_devolucion)
                     .ToList();
 
@@ -110,7 +110,7 @@ namespace Biblioteca_U2.Controllers
             }
         }
 
-        // 🔄 Solicitar renovación de préstamo
+        // 🔄 Solicitar renovación de préstamo (CUESTA 30 CRÉDITOS)
         [AuthorizeUser]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -119,6 +119,7 @@ namespace Biblioteca_U2.Controllers
             try
             {
                 int userId = Convert.ToInt32(Session["UserId"]);
+                var usuario = db.tbusuario.Find(userId);
                 var prestamo = db.tbprestamo
                     .Include(p => p.tblibro)
                     .FirstOrDefault(p => p.id_prestamo == idPrestamo &&
@@ -130,9 +131,17 @@ namespace Biblioteca_U2.Controllers
                     return RedirectToAction("MisPrestamos");
                 }
 
-                if (prestamo.estado == "Devuelto") // CAMBIADO: "completado" → "Devuelto"
+                if (prestamo.estado == "Devuelto")
                 {
                     TempData["ErrorMessage"] = "⚠️ Este préstamo ya fue completado.";
+                    return RedirectToAction("MisPrestamos");
+                }
+
+                // 💰 VALIDAR CRÉDITOS (renovar cuesta 30 créditos)
+                int creditosUsuario = usuario.creditos_disponibles ?? 0;
+                if (creditosUsuario < 30)
+                {
+                    TempData["ErrorMessage"] = $"❌ No tienes suficientes créditos para renovar. Necesitas 30, tienes {creditosUsuario}. Devuelve libros a tiempo para ganar créditos.";
                     return RedirectToAction("MisPrestamos");
                 }
 
@@ -153,6 +162,24 @@ namespace Biblioteca_U2.Controllers
                     return RedirectToAction("MisPrestamos");
                 }
 
+                // 💸 DESCONTAR CRÉDITOS
+                int saldoAnterior = creditosUsuario;
+                int saldoNuevo = saldoAnterior - 30;
+                usuario.creditos_disponibles = saldoNuevo;
+
+                // 📝 REGISTRAR MOVIMIENTO
+                var movimiento = new tbmovimiento_credito
+                {
+                    id_usuario = userId,
+                    tipo_movimiento = "gasto",
+                    cantidad = -30,
+                    saldo_anterior = saldoAnterior,
+                    saldo_nuevo = saldoNuevo,
+                    descripcion = $"Renovación de préstamo: {prestamo.tblibro.titulo}",
+                    fecha_movimiento = DateTime.Now
+                };
+                db.tbmovimiento_credito.Add(movimiento);
+
                 // Realizar renovación (extender 14 días más)
                 prestamo.fecha_prevista_devolucion = prestamo.fecha_prevista_devolucion.AddDays(14);
                 prestamo.numero_renovaciones = (prestamo.numero_renovaciones ?? 0) + 1;
@@ -160,12 +187,12 @@ namespace Biblioteca_U2.Controllers
                 // Si estaba retrasado, volver a activo
                 if (prestamo.estado == "retrasado")
                 {
-                    prestamo.estado = "activo"; // CAMBIO: "Prestado" → "activo"
+                    prestamo.estado = "activo";
                 }
 
                 db.SaveChanges();
 
-                TempData["SuccessMessage"] = $"✅ Préstamo renovado exitosamente. Nueva fecha de devolución: {prestamo.fecha_prevista_devolucion:dd/MM/yyyy}.";
+                TempData["SuccessMessage"] = $"✅ Préstamo renovado (-30 créditos). Nueva fecha: {prestamo.fecha_prevista_devolucion:dd/MM/yyyy}. Saldo actual: {saldoNuevo} créditos.";
             }
             catch (Exception ex)
             {
@@ -202,7 +229,7 @@ namespace Biblioteca_U2.Controllers
             }
         }
 
-        // ✅ Aprobar solicitud de préstamo
+        // ✅ Aprobar solicitud de préstamo (VALIDAR RESTRICCIONES POR CRÉDITOS)
         [AuthorizeAdmin]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -245,9 +272,49 @@ namespace Biblioteca_U2.Controllers
                 }
 
                 // Validar estado de cuenta del solicitante
-                if (solicitante.estado_cuenta == "suspendida" || solicitante.estado_cuenta == "bloqueada")
+                if (solicitante.estado_cuenta == "suspendida")
                 {
-                    TempData["ErrorMessage"] = "⚠️ La cuenta del usuario está " + solicitante.estado_cuenta + ".";
+                    TempData["ErrorMessage"] = "⚠️ La cuenta del usuario está suspendida (créditos entre -51 y -100). Debe devolver libros o contactar a un administrador.";
+                    return RedirectToAction("SolicitudesPendientes");
+                }
+                if (solicitante.estado_cuenta == "bloqueada")
+                {
+                    TempData["ErrorMessage"] = "⚠️ La cuenta del usuario está bloqueada (créditos -101 o menos). Requiere intervención administrativa.";
+                    return RedirectToAction("SolicitudesPendientes");
+                }
+
+                // 💰 VALIDAR RESTRICCIONES POR CRÉDITOS NEGATIVOS
+                int creditosUsuario = solicitante.creditos_disponibles ?? 0;
+
+                // Entre -1 y -50: Advertencia pero permitir (límite de 1 libro)
+                if (creditosUsuario >= -50 && creditosUsuario < 0)
+                {
+                    int prestamosActivos = db.tbprestamo
+                        .Count(p => p.id_usuario_prestatario == solicitante.id_usuario &&
+                                   (p.estado == "activo" || p.estado == "retrasado"));
+
+                    if (prestamosActivos >= 1)
+                    {
+                        TempData["ErrorMessage"] = $"⚠️ El usuario tiene {creditosUsuario} créditos (advertencia). Solo puede tener 1 libro prestado a la vez.";
+                        return RedirectToAction("SolicitudesPendientes");
+                    }
+                }
+
+                // Entre -51 y -100: Cuenta suspendida
+                if (creditosUsuario >= -100 && creditosUsuario <= -51)
+                {
+                    solicitante.estado_cuenta = "suspendida";
+                    db.SaveChanges();
+                    TempData["ErrorMessage"] = $"⚠️ El usuario tiene {creditosUsuario} créditos. Cuenta suspendida automáticamente. Debe devolver libros antes de solicitar más.";
+                    return RedirectToAction("SolicitudesPendientes");
+                }
+
+                // -101 o menos: Cuenta bloqueada
+                if (creditosUsuario <= -101)
+                {
+                    solicitante.estado_cuenta = "bloqueada";
+                    db.SaveChanges();
+                    TempData["ErrorMessage"] = $"⚠️ El usuario tiene {creditosUsuario} créditos. Cuenta bloqueada automáticamente. Requiere intervención administrativa.";
                     return RedirectToAction("SolicitudesPendientes");
                 }
 
@@ -260,7 +327,7 @@ namespace Biblioteca_U2.Controllers
                     id_admin_entrega = adminId,
                     fecha_entrega = DateTime.Now,
                     fecha_prevista_devolucion = DateTime.Now.AddDays(14),
-                    estado = "activo", // CAMBIO: "Prestado" → "activo"
+                    estado = "activo",
                     numero_renovaciones = 0
                 };
 
@@ -276,11 +343,17 @@ namespace Biblioteca_U2.Controllers
 
                 db.SaveChanges();
 
-                TempData["SuccessMessage"] = $"✅ Solicitud aprobada y préstamo creado. Libro '{libro.titulo}' entregado a {solicitante.nombre} {solicitante.apellido}.";
+                string advertencia = "";
+                if (creditosUsuario < 0)
+                {
+                    advertencia = $" ⚠️ Usuario en advertencia ({creditosUsuario} créditos).";
+                }
+
+                TempData["SuccessMessage"] = $"✅ Solicitud aprobada y préstamo creado. Libro '{libro.titulo}' entregado a {solicitante.nombre} {solicitante.apellido}.{advertencia}";
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("Error al aprobar solicitud: " + ex); // Log en consola de Visual Studio
+                System.Diagnostics.Debug.WriteLine("Error al aprobar solicitud: " + ex);
                 var innerMsg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
                 TempData["ErrorMessage"] = "❌ Error al aprobar solicitud: " + innerMsg;
             }
@@ -341,7 +414,7 @@ namespace Biblioteca_U2.Controllers
                     .Include(p => p.tblibro)
                     .Include(p => p.tbusuario2) // prestatario
                     .Include(p => p.tbusuario3) // donador
-                    .Where(p => p.estado == "activo" || p.estado == "retrasado") // CAMBIO: "Prestado" → "activo"
+                    .Where(p => p.estado == "activo" || p.estado == "retrasado")
                     .OrderBy(p => p.fecha_prevista_devolucion)
                     .ToList();
 
@@ -349,7 +422,7 @@ namespace Biblioteca_U2.Controllers
                 var hoy = DateTime.Now;
                 foreach (var prestamo in prestamos)
                 {
-                    if (prestamo.fecha_prevista_devolucion < hoy && prestamo.estado == "activo") // CAMBIO: "Prestado" → "activo"
+                    if (prestamo.fecha_prevista_devolucion < hoy && prestamo.estado == "activo")
                     {
                         prestamo.estado = "retrasado";
                     }
@@ -383,7 +456,7 @@ namespace Biblioteca_U2.Controllers
                     return RedirectToAction("PrestamosActivos");
                 }
 
-                if (prestamo.estado == "Devuelto") // CAMBIADO: "completado" → "Devuelto"
+                if (prestamo.estado == "Devuelto")
                 {
                     TempData["ErrorMessage"] = "⚠️ Este préstamo ya fue completado.";
                     return RedirectToAction("PrestamosActivos");
@@ -407,7 +480,7 @@ namespace Biblioteca_U2.Controllers
             }
         }
 
-        // 📖 Procesar devolución
+        // 📖 Procesar devolución (OTORGA CRÉDITOS SEGÚN PUNTUALIDAD Y CONDICIÓN)
         [AuthorizeAdmin]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -427,7 +500,7 @@ namespace Biblioteca_U2.Controllers
                     return RedirectToAction("PrestamosActivos");
                 }
 
-                if (prestamo.estado == "Devuelto") // CAMBIADO: "completado" → "Devuelto"
+                if (prestamo.estado == "Devuelto")
                 {
                     TempData["ErrorMessage"] = "⚠️ Este préstamo ya fue completado.";
                     return RedirectToAction("PrestamosActivos");
@@ -438,7 +511,7 @@ namespace Biblioteca_U2.Controllers
                 prestamo.id_admin_devolucion = adminId;
                 prestamo.condicion_devolucion = condicionDevolucion;
                 prestamo.descripcion_danio = descripcionDanio;
-                prestamo.estado = "completado"; //
+                prestamo.estado = "completado";
 
                 // Actualizar la condición del libro si es necesario
                 if (condicionDevolucion == "Dañado" || condicionDevolucion == "Regular")
@@ -453,7 +526,99 @@ namespace Biblioteca_U2.Controllers
                 var usuario = prestamo.tbusuario2;
                 usuario.numero_prestamos_completados = (usuario.numero_prestamos_completados ?? 0) + 1;
 
+                // 🎉 SISTEMA DE CRÉDITOS - CALCULAR RECOMPENSA
+                int creditosGanados = 0;
+                string razonCreditos = "";
+                int diasAnticipacion = (prestamo.fecha_prevista_devolucion - prestamo.fecha_devolucion_real.Value).Days;
+
+                // 1️⃣ Evaluar puntualidad
+                if (diasAnticipacion >= 3)
+                {
+                    // Devuelto 3+ días antes = +15 créditos
+                    creditosGanados = 15;
+                    razonCreditos = $"Devolución anticipada ({diasAnticipacion} días antes)";
+                }
+                else if (diasAnticipacion >= 0)
+                {
+                    // Devuelto a tiempo o 1-2 días antes = +10 créditos
+                    creditosGanados = 10;
+                    razonCreditos = "Devolución a tiempo";
+                }
+                else
+                {
+                    // Devuelto tarde = 0 créditos
+                    creditosGanados = 0;
+                    razonCreditos = $"Devolución tardía ({Math.Abs(diasAnticipacion)} días de retraso)";
+                }
+
+                // 2️⃣ Penalizar por daños
+                if (condicionDevolucion == "Dañado")
+                {
+                    creditosGanados -= 50; // Penalización fuerte
+                    razonCreditos += " - Penalización por libro dañado (-50)";
+                }
+                else if (condicionDevolucion == "Regular")
+                {
+                    creditosGanados -= 20; // Penalización moderada
+                    razonCreditos += " - Penalización por condición regular (-20)";
+                }
+
+                // 3️⃣ APLICAR CRÉDITOS AL USUARIO
+                int saldoAnterior = usuario.creditos_disponibles ?? 0;
+                int saldoNuevo = saldoAnterior + creditosGanados;
+                usuario.creditos_disponibles = saldoNuevo;
+
+                // 4️⃣ REGISTRAR MOVIMIENTO DE CRÉDITOS
+                if (creditosGanados != 0)
+                {
+                    var movimiento = new tbmovimiento_credito
+                    {
+                        id_usuario = usuario.id_usuario,
+                        tipo_movimiento = creditosGanados > 0 ? "ganancia" : "gasto",
+                        cantidad = creditosGanados,
+                        saldo_anterior = saldoAnterior,
+                        saldo_nuevo = saldoNuevo,
+                        descripcion = $"{razonCreditos} - Libro: {prestamo.tblibro.titulo}",
+                        id_admin = adminId,
+                        fecha_movimiento = DateTime.Now
+                    };
+                    db.tbmovimiento_credito.Add(movimiento);
+                }
+
+                // 5️⃣ ACTUALIZAR ESTADO DE CUENTA SEGÚN CRÉDITOS
+                if (saldoNuevo >= 0)
+                {
+                    usuario.estado_cuenta = "activa";
+                }
+                else if (saldoNuevo >= -50)
+                {
+                    usuario.estado_cuenta = "activa"; // Advertencia pero no suspender
+                }
+                else if (saldoNuevo >= -100)
+                {
+                    usuario.estado_cuenta = "suspendida";
+                }
+                else
+                {
+                    usuario.estado_cuenta = "bloqueada";
+                }
+
                 db.SaveChanges();
+
+                // 6️⃣ CONSTRUIR MENSAJE DE ÉXITO
+                string mensajeCreditos = "";
+                if (creditosGanados > 0)
+                {
+                    mensajeCreditos = $" 🎉 +{creditosGanados} créditos ganados! Saldo: {saldoNuevo}";
+                }
+                else if (creditosGanados < 0)
+                {
+                    mensajeCreditos = $" ⚠️ {creditosGanados} créditos (penalización). Saldo: {saldoNuevo}";
+                }
+                else
+                {
+                    mensajeCreditos = $" Sin créditos (devuelto tarde). Saldo: {saldoNuevo}";
+                }
 
                 // Verificar si hay reservas pendientes para notificar
                 var primeraReserva = db.tbreserva
@@ -468,11 +633,11 @@ namespace Biblioteca_U2.Controllers
                     primeraReserva.fecha_expiracion_confirmacion = DateTime.Now.AddDays(2);
                     db.SaveChanges();
 
-                    TempData["SuccessMessage"] = $"✅ Devolución registrada. Se ha notificado al siguiente usuario en la cola de reserva.";
+                    TempData["SuccessMessage"] = $"✅ Devolución registrada.{mensajeCreditos} Se notificó al siguiente en cola de reserva.";
                 }
                 else
                 {
-                    TempData["SuccessMessage"] = $"✅ Devolución registrada exitosamente. El libro '{prestamo.tblibro.titulo}' está disponible nuevamente.";
+                    TempData["SuccessMessage"] = $"✅ Devolución registrada. '{prestamo.tblibro.titulo}' disponible nuevamente.{mensajeCreditos}";
                 }
             }
             catch (Exception ex)
@@ -533,7 +698,7 @@ namespace Biblioteca_U2.Controllers
                     return RedirectToAction("PrestamosActivos");
                 }
 
-                if (prestamo.estado == "Devuelto") // CAMBIADO: "completado" → "Devuelto"
+                if (prestamo.estado == "Devuelto")
                 {
                     TempData["ErrorMessage"] = "⚠️ Este préstamo ya fue completado.";
                     return RedirectToAction("PrestamosActivos");
@@ -562,7 +727,7 @@ namespace Biblioteca_U2.Controllers
 
                 if (prestamo.estado == "retrasado")
                 {
-                    prestamo.estado = "activo"; // CAMBIO: "Prestado" → "activo"
+                    prestamo.estado = "activo";
                 }
 
                 db.SaveChanges();
@@ -575,6 +740,43 @@ namespace Biblioteca_U2.Controllers
             }
 
             return RedirectToAction("PrestamosActivos");
+        }
+
+        #endregion
+
+        #region Métodos Auxiliares para Sistema de Badges
+
+        // 🏆 Calcular nivel del usuario según libros leídos
+        private string ObtenerNivelUsuario(int librosLeidos)
+        {
+            if (librosLeidos >= 31) return "Maestro Lector";
+            if (librosLeidos >= 16) return "Lector Avanzado";
+            if (librosLeidos >= 6) return "Lector Aplicado";
+            return "Lector Novato";
+        }
+
+        // 🎖️ Obtener icono del badge según nivel
+        private string ObtenerIconoBadge(string nivel)
+        {
+            switch (nivel)
+            {
+                case "Maestro Lector": return "fa-crown";
+                case "Lector Avanzado": return "fa-medal";
+                case "Lector Aplicado": return "fa-star";
+                default: return "fa-book-reader";
+            }
+        }
+
+        // 🎨 Obtener color del badge según nivel
+        private string ObtenerColorBadge(string nivel)
+        {
+            switch (nivel)
+            {
+                case "Maestro Lector": return "#FFD700"; // Dorado
+                case "Lector Avanzado": return "#C0C0C0"; // Plateado
+                case "Lector Aplicado": return "#CD7F32"; // Bronce
+                default: return "#6B7280"; // Gris
+            }
         }
 
         #endregion
