@@ -1,27 +1,10 @@
 ﻿@model Biblioteca_U2.Models.CatalogoViewModel
 @{
     ViewBag.Title = "Catálogo de Libros";
-    Layout = null;
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>@ViewBag.Title</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { 'sans': ['Segoe UI', 'Poppins', 'sans-serif'] },
-                    colors: { 'purple-gradient-start': '#667eea', 'purple-gradient-end': '#764ba2' }
-                }
-            }
-        }
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-    <style>
+<style>
         /* 🔝 Cabecera fija */
         header {
             position: sticky;
@@ -154,41 +137,18 @@
                 transform: scale(1.2);
             }
     </style>
-</head>
 
-<body class="font-sans bg-gray-50">
+<!-- 💰 Badge de Créditos flotante -->
+<div class="fixed top-20 right-4 z-40 flex items-center bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 px-4 py-2 rounded-lg shadow-lg">
+    <i class="fas fa-coins text-xl mr-2"></i>
+    <div class="flex flex-col">
+        <span class="text-xs font-medium leading-none">Créditos</span>
+        <span class="text-lg font-bold leading-tight">@(Model.CreditosUsuario ?? 0)</span>
+    </div>
+</div>
 
-    <!-- 🔝 Header fijo -->
-    <header class="bg-white/90 shadow-md border-b-4 border-gradient-to-r from-purple-gradient-start to-purple-gradient-end">
-        <div class="max-w-7xl mx-auto px-4 flex justify-between items-center h-16">
-            <div class="flex items-center">
-                <i class="fas fa-book-open text-3xl text-purple-600 mr-3"></i>
-                <h1 class="text-2xl font-bold text-gray-800">Biblioteca UPT</h1>
-            </div>
-            <div class="flex items-center space-x-4">
-                <!-- 💰 Badge de Créditos -->
-                <div class="flex items-center bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 px-4 py-2 rounded-lg shadow-md">
-                    <i class="fas fa-coins text-xl mr-2"></i>
-                    <div class="flex flex-col">
-                        <span class="text-xs font-medium leading-none">Créditos</span>
-                        <span class="text-lg font-bold leading-tight">@(Model.CreditosUsuario ?? 0)</span>
-                    </div>
-                </div>
-                <a href="@Url.Action("MisPrestamos","Prestamos")"
-                   class="text-gray-700 hover:text-purple-600 font-medium transition">
-                    <i class="fas fa-bookmark mr-2"></i>Mis Préstamos
-                </a>
-                <span class="text-gray-700 font-medium">Bienvenido, @Model.UsuarioNombre</span>
-                <a href="@Url.Action("Logout","Account")"
-                   class="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-2 rounded-lg font-semibold hover:from-purple-700 hover:to-purple-800 transition duration-300">
-                    <i class="fas fa-sign-out-alt mr-2"></i>Salir
-                </a>
-            </div>
-        </div>
-    </header>
-
-    <!-- 📚 Contenido principal -->
-    <main class="max-w-7xl mx-auto px-4 py-8">
+<!-- 📚 Contenido principal -->
+<main class="max-w-7xl mx-auto px-4 py-8 mt-4">
 
         <!-- 🔔 Mensajes de notificación -->
         @if (TempData["SuccessMessage"] != null)
@@ -312,18 +272,85 @@
         <p class="text-gray-600 font-medium mb-4">@Model.TotalResultados libros encontrados</p>
 
         <div id="booksContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            @foreach (var libro in Model.Libros)
+            @{
+                var librosConCalif = ViewBag.LibrosConCalificacion;
+                if (librosConCalif == null)
+                {
+                    librosConCalif = Model.Libros.Select(l => new { 
+                        Libro = l, 
+                        PromedioCalificacion = 0.0, 
+                        TotalCalificaciones = 0 
+                    }).ToList();
+                }
+            }
+            @foreach (dynamic libroData in librosConCalif)
             {
+                Biblioteca_U2.Models.tblibro libro = null;
+                double promedio = 0;
+                int totalResenas = 0;
+                
+                try 
+                {
+                    libro = libroData.Libro;
+                    promedio = (double)libroData.PromedioCalificacion;
+                    totalResenas = (int)libroData.TotalCalificaciones;
+                }
+                catch 
+                {
+                    // Fallback si hay error con objeto dinámico
+                    var type = libroData.GetType();
+                    libro = type.GetProperty("Libro").GetValue(libroData, null);
+                    promedio = (double)type.GetProperty("PromedioCalificacion").GetValue(libroData, null);
+                    totalResenas = (int)type.GetProperty("TotalCalificaciones").GetValue(libroData, null);
+                }
+
                 <div class="bookCard bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300">
-                    <div class="h-48 bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center">
+                    <div class="h-48 bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center relative">
                         <i class="fas fa-book text-6xl text-purple-600"></i>
+                        
+                        @* ⭐ Badge de calificación *@
+                        @if (totalResenas > 0)
+                        {
+                            <div class="absolute top-2 right-2 bg-white px-2 py-1 rounded-lg shadow-md flex items-center gap-1">
+                                <i class="fas fa-star text-yellow-500 text-sm"></i>
+                                <span class="text-sm font-bold text-gray-800">@promedio.ToString("F1")</span>
+                            </div>
+                        }
                     </div>
                     <div class="p-6">
                         <h3 class="font-bold text-lg text-gray-800 mb-2">@libro.titulo</h3>
                         <p class="text-gray-600 text-sm mb-1"><i class="fas fa-user-edit mr-1 text-purple-500"></i>@libro.autor</p>
-                        <p class="text-gray-500 text-xs mb-3">
+                        <p class="text-gray-500 text-xs mb-2">
                             @(libro.tbcarrera != null ? libro.tbcarrera.nombre_carrera : "General")
                         </p>
+
+                        @* ⭐ Mostrar estrellas de calificación *@
+                        @if (totalResenas > 0)
+                        {
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="flex text-yellow-500 text-xs">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= Math.Round(promedio))
+                                        {
+                                            <i class="fas fa-star"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-star text-gray-300"></i>
+                                        }
+                                    }
+                                </div>
+                                <a href="@Url.Action("VerResenas", "Calificaciones", new { idLibro = libro.id_libro })" 
+                                   class="text-xs text-purple-600 hover:text-purple-800 hover:underline">
+                                    (@totalResenas)
+                                </a>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-xs text-gray-400 mb-3 italic">Sin reseñas aún</p>
+                        }
 
                         @if (libro.disponible == true)
                         {
@@ -520,6 +547,3 @@
         if (e.key === 'Enter') sendBtn.click();
     });
     </script>
-
-</body>
-</html>

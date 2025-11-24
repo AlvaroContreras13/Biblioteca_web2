@@ -1,0 +1,249 @@
+@{
+    ViewBag.Title = "Mi Perfil";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var usuario = ViewBag.Usuario as Biblioteca_U2.Models.tbusuario;
+    int librosLeidos = ViewBag.LibrosLeidos;
+    int librosDonados = ViewBag.LibrosDonados;
+    int creditosActuales = ViewBag.CreditosActuales;
+    double promedioCalificaciones = ViewBag.PromedioCalificaciones;
+    int totalCalificaciones = ViewBag.TotalCalificaciones;
+    string nivel = ViewBag.Nivel;
+    string iconoBadge = ViewBag.IconoBadge;
+    string colorBadge = ViewBag.ColorBadge;
+    dynamic badges = ViewBag.Badges;
+    var prestamosRecientes = ViewBag.PrestamosRecientes as List<Biblioteca_U2.Models.tbprestamo>;
+}
+
+<style>
+    .badge-container {
+        filter: grayscale(100%);
+        opacity: 0.3;
+        transition: all 0.3s;
+    }
+    .badge-unlocked {
+        filter: grayscale(0%);
+        opacity: 1;
+    }
+    .badge-unlocked:hover {
+        transform: scale(1.1);
+    }
+</style>
+
+<main class="px-4">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header del perfil -->
+        <div class="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl shadow-2xl p-8 text-white mb-6">
+            <div class="flex items-center gap-6">
+                <!-- Avatar grande -->
+                <div class="bg-white text-purple-600 w-24 h-24 rounded-full flex items-center justify-center font-bold text-4xl shadow-xl">
+                    @usuario.nombre.Substring(0, 1).ToUpper()
+                </div>
+                
+                <div class="flex-1">
+                    <h1 class="text-4xl font-bold mb-2">@usuario.nombre @usuario.apellido</h1>
+                    <p class="text-purple-100 mb-3">
+                        <i class="fas fa-graduation-cap mr-2"></i>
+                        @(usuario.tbcarrera != null ? usuario.tbcarrera.nombre_carrera : "Sin carrera asignada")
+                    </p>
+                    
+                    <!-- Badge de nivel -->
+                    <div class="inline-flex items-center bg-white bg-opacity-20 px-4 py-2 rounded-full">
+                        <i class="fas @iconoBadge mr-2" style="color: @colorBadge;"></i>
+                        <span class="font-semibold">@nivel</span>
+                    </div>
+                </div>
+
+                <!-- Calificación promedio -->
+                @if (totalCalificaciones > 0)
+                {
+                    <div class="bg-white text-gray-900 px-6 py-4 rounded-xl text-center">
+                        <div class="text-3xl font-bold text-yellow-600">@promedioCalificaciones.ToString("F1")</div>
+                        <p class="text-sm text-gray-600">⭐ Reputación</p>
+                        <p class="text-xs text-gray-500">@totalCalificaciones opiniones</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Estadísticas principales -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <!-- Libros leídos -->
+            <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition duration-300">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-semibold mb-1">Libros Leídos</p>
+                        <p class="text-4xl font-bold text-purple-600">@librosLeidos</p>
+                    </div>
+                    <div class="bg-purple-100 p-4 rounded-lg">
+                        <i class="fas fa-book-open text-3xl text-purple-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Libros donados -->
+            <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition duration-300">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-semibold mb-1">Libros Donados</p>
+                        <p class="text-4xl font-bold text-green-600">@librosDonados</p>
+                    </div>
+                    <div class="bg-green-100 p-4 rounded-lg">
+                        <i class="fas fa-gift text-3xl text-green-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Créditos -->
+            <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition duration-300">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-semibold mb-1">Créditos Actuales</p>
+                        <p class="text-4xl font-bold text-yellow-600">@creditosActuales</p>
+                    </div>
+                    <div class="bg-yellow-100 p-4 rounded-lg">
+                        <i class="fas fa-coins text-3xl text-yellow-600"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Badges/Logros -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-trophy text-yellow-500 mr-2"></i>
+                    Logros Desbloqueados
+                </h3>
+                
+                <div class="grid grid-cols-3 gap-4">
+                    <!-- Badge: Primer Libro -->
+                    <div class="badge-container @(badges.PrimerLibro ? "badge-unlocked" : "")" title="@(badges.PrimerLibro ? "¡Primer libro leído!" : "Lee tu primer libro")">
+                        <div class="bg-blue-100 p-4 rounded-lg text-center">
+                            <i class="fas fa-book text-3xl text-blue-600 mb-2"></i>
+                            <p class="text-xs font-semibold">Lector Iniciado</p>
+                        </div>
+                    </div>
+
+                    <!-- Badge: 5 Libros -->
+                    <div class="badge-container @(badges.Lector5 ? "badge-unlocked" : "")" title="@(badges.Lector5 ? "¡5 libros leídos!" : "Lee 5 libros")">
+                        <div class="bg-indigo-100 p-4 rounded-lg text-center">
+                            <i class="fas fa-book-reader text-3xl text-indigo-600 mb-2"></i>
+                            <p class="text-xs font-semibold">Lector Activo</p>
+                        </div>
+                    </div>
+
+                    <!-- Badge: 10 Libros -->
+                    <div class="badge-container @(badges.Lector10 ? "badge-unlocked" : "")" title="@(badges.Lector10 ? "¡10 libros leídos!" : "Lee 10 libros")">
+                        <div class="bg-purple-100 p-4 rounded-lg text-center">
+                            <i class="fas fa-glasses text-3xl text-purple-600 mb-2"></i>
+                            <p class="text-xs font-semibold">Bibliófilo</p>
+                        </div>
+                    </div>
+
+                    <!-- Badge: 25 Libros -->
+                    <div class="badge-container @(badges.Lector25 ? "badge-unlocked" : "")" title="@(badges.Lector25 ? "¡25 libros leídos!" : "Lee 25 libros")">
+                        <div class="bg-pink-100 p-4 rounded-lg text-center">
+                            <i class="fas fa-award text-3xl text-pink-600 mb-2"></i>
+                            <p class="text-xs font-semibold">Experto Lector</p>
+                        </div>
+                    </div>
+
+                    <!-- Badge: Primera Donación -->
+                    <div class="badge-container @(badges.PrimeraDonacion ? "badge-unlocked" : "")" title="@(badges.PrimeraDonacion ? "¡Primera donación!" : "Dona tu primer libro")">
+                        <div class="bg-green-100 p-4 rounded-lg text-center">
+                            <i class="fas fa-heart text-3xl text-green-600 mb-2"></i>
+                            <p class="text-xs font-semibold">Generoso</p>
+                        </div>
+                    </div>
+
+                    <!-- Badge: 5 Donaciones -->
+                    <div class="badge-container @(badges.Donador5 ? "badge-unlocked" : "")" title="@(badges.Donador5 ? "¡5 donaciones!" : "Dona 5 libros")">
+                        <div class="bg-emerald-100 p-4 rounded-lg text-center">
+                            <i class="fas fa-hands-helping text-3xl text-emerald-600 mb-2"></i>
+                            <p class="text-xs font-semibold">Benefactor</p>
+                        </div>
+                    </div>
+
+                    <!-- Badge: Donador Oro -->
+                    <div class="badge-container @(badges.DonadorOro ? "badge-unlocked" : "")" title="@(badges.DonadorOro ? "¡20+ donaciones!" : "Dona 20 libros")">
+                        <div class="bg-yellow-100 p-4 rounded-lg text-center">
+                            <i class="fas fa-crown text-3xl text-yellow-600 mb-2"></i>
+                            <p class="text-xs font-semibold">Donador Oro</p>
+                        </div>
+                    </div>
+
+                    <!-- Badge: Puntual -->
+                    <div class="badge-container @(badges.Puntual ? "badge-unlocked" : "")" title="@(badges.Puntual ? "¡10+ devoluciones a tiempo!" : "Devuelve 10 libros a tiempo")">
+                        <div class="bg-cyan-100 p-4 rounded-lg text-center">
+                            <i class="fas fa-clock text-3xl text-cyan-600 mb-2"></i>
+                            <p class="text-xs font-semibold">Puntual</p>
+                        </div>
+                    </div>
+
+                    <!-- Badge: Ahorrador -->
+                    <div class="badge-container @(badges.Ahorrador ? "badge-unlocked" : "")" title="@(badges.Ahorrador ? "¡100+ créditos!" : "Acumula 100 créditos")">
+                        <div class="bg-amber-100 p-4 rounded-lg text-center">
+                            <i class="fas fa-piggy-bank text-3xl text-amber-600 mb-2"></i>
+                            <p class="text-xs font-semibold">Ahorrador</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actividad Reciente -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-history text-purple-500 mr-2"></i>
+                    Actividad Reciente
+                </h3>
+
+                @if (prestamosRecientes.Any())
+                {
+                    <div class="space-y-3">
+                        @foreach (var prestamo in prestamosRecientes)
+                        {
+                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                                <div class="bg-purple-100 p-2 rounded-lg">
+                                    <i class="fas fa-book text-purple-600"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-semibold text-gray-800 text-sm">@prestamo.tblibro.titulo</p>
+                                    <p class="text-xs text-gray-500">
+                                        @prestamo.fecha_entrega?.ToString("dd/MM/yyyy")
+                                    </p>
+                                </div>
+                                @if (prestamo.estado == "completado")
+                                {
+                                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                                        <i class="fas fa-check"></i> Completado
+                                    </span>
+                                }
+                                else if (prestamo.estado == "activo")
+                                {
+                                    <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                                        <i class="fas fa-clock"></i> Activo
+                                    </span>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-gray-500 text-center py-8">
+                        <i class="fas fa-inbox text-4xl text-gray-300 mb-2"></i><br />
+                        Sin actividad reciente
+                    </p>
+                }
+            </div>
+        </div>
+
+        <!-- Botón ver ranking -->
+        <div class="mt-6 text-center">
+            <a href="@Url.Action("Ranking", "Calificaciones")" 
+               class="inline-flex items-center bg-gradient-to-r from-yellow-500 to-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-yellow-600 hover:to-orange-700 transition duration-300 shadow-lg">
+                <i class="fas fa-trophy mr-2"></i>Ver Ranking Global
+            </a>
+        </div>
+    </div>
+</main>

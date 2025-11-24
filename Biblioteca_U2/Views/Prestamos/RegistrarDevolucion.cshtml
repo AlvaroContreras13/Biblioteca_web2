@@ -1,59 +1,35 @@
 @model Biblioteca_U2.Models.tbprestamo
 @{
     ViewBag.Title = "Registrar Devolución";
-    Layout = null;
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        min-height: 100vh;
+    }
+    html {
+        scroll-behavior: smooth;
+    }
+</style>
 
-
-    <title>@ViewBag.Title</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { 'sans': ['Segoe UI', 'Poppins', 'sans-serif'] },
-                    colors: { 'purple-gradient-start': '#667eea', 'purple-gradient-end': '#764ba2' }
-                }
-            }
-        }
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-    <style>
-        header {
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            backdrop-filter: blur(10px);
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-    </style>
-</head>
-
-<body class="font-sans bg-gray-50">
-
-    <!-- 🔝 Header fijo -->
-    <header class="bg-white/90 shadow-md border-b-4 border-gradient-to-r from-purple-gradient-start to-purple-gradient-end">
-        <div class="max-w-7xl mx-auto px-4 flex justify-between items-center h-16">
-            <div class="flex items-center">
-                <i class="fas fa-user-shield text-3xl text-purple-600 mr-3"></i>
-                <h1 class="text-2xl font-bold text-gray-800">Panel Administrador</h1>
-            </div>
-            <div class="flex items-center space-x-4">
-                <a href="@Url.Action("PrestamosActivos","Prestamos")" class="text-gray-700 hover:text-purple-600 font-medium transition">
-                    <i class="fas fa-arrow-left mr-2"></i>Volver a Préstamos
-                </a>
-                <span class="text-gray-700 font-medium">@Session["UserName"]</span>
-                <a href="@Url.Action("Logout","Account")" class="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-2 rounded-lg font-semibold hover:from-purple-700 hover:to-purple-800 transition duration-300">
-                    <i class="fas fa-sign-out-alt mr-2"></i>Salir
-                </a>
+<!-- Contenido principal -->
+<main class="max-w-7xl mx-auto px-4 py-8">
+                            <i class="fas fa-book-open mr-1"></i>Préstamos
+                        </a>
+                        <a href="@Url.Action("ReservasActivas","Reservas")" class="text-gray-700 hover:text-purple-600 font-medium transition">
+                            <i class="fas fa-clock mr-1"></i>Reservas
+                        </a>
+                    </nav>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-700 font-medium hidden lg:inline">@Session["UserName"]</span>
+                    <a href="@Url.Action("Logout","Account")"
+                       class="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-2 rounded-lg font-semibold hover:from-purple-700 hover:to-purple-800 transition duration-300">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Salir
+                    </a>
+                </div>
             </div>
         </div>
     </header>
@@ -224,6 +200,3 @@
         }
 
     </main>
-
-</body>
-</html>

@@ -1,0 +1,139 @@
+@model IEnumerable<Biblioteca_U2.Models.tbcalificacion>
+@{
+    ViewBag.Title = "Reseñas del Libro";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var libro = ViewBag.Libro as Biblioteca_U2.Models.tblibro;
+    double promedio = ViewBag.PromedioCalificacion;
+    int totalResenas = ViewBag.TotalResenas;
+}
+
+<style>
+    .stars-display {
+        color: #FBBF24;
+        font-size: 1.25rem;
+    }
+    .empty-star {
+        color: #D1D5DB;
+    }
+</style>
+
+<main class="px-4">
+    <div class="max-w-5xl mx-auto">
+        <!-- Breadcrumb -->
+        <nav class="mb-6 text-white flex items-center space-x-2">
+            <a href="@Url.Action("Catalogo","Libros")" class="hover:text-pink-200 flex items-center">
+                <i class="fas fa-book mr-1"></i> Catálogo
+            </a>
+            <i class="fas fa-chevron-right text-pink-200"></i>
+            <span class="text-pink-200">Reseñas</span>
+        </nav>
+
+        <!-- Card del libro -->
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden mb-6">
+            <div class="bg-gradient-to-r from-yellow-500 to-orange-600 p-8 text-white">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h2 class="text-3xl font-bold mb-2">@libro.titulo</h2>
+                        <p class="text-yellow-100 mb-1"><i class="fas fa-user mr-2"></i>@libro.autor</p>
+                        <p class="text-yellow-100"><i class="fas fa-tag mr-2"></i>@libro.tbgenero.nombre_genero</p>
+                    </div>
+                    <div class="bg-white text-gray-900 px-6 py-4 rounded-xl text-center">
+                        <div class="text-4xl font-bold text-yellow-600">@promedio.ToString("F1")</div>
+                        <div class="stars-display flex justify-center mt-2">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= Math.Round(promedio))
+                                {
+                                    <i class="fas fa-star"></i>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-star empty-star"></i>
+                                }
+                            }
+                        </div>
+                        <p class="text-sm text-gray-600 mt-2">@totalResenas reseña@(totalResenas != 1 ? "s" : "")</p>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(libro.sinopsis))
+            {
+                <div class="p-6 bg-gray-50 border-b">
+                    <h3 class="font-semibold text-gray-700 mb-2"><i class="fas fa-align-left mr-2"></i>Sinopsis</h3>
+                    <p class="text-gray-600">@libro.sinopsis</p>
+                </div>
+            }
+        </div>
+
+        <!-- Lista de reseñas -->
+        @if (Model.Any())
+        {
+            <div class="space-y-4">
+                @foreach (var calificacion in Model)
+                {
+                    <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition duration-300">
+                        <div class="flex items-start gap-4">
+                            <!-- Avatar -->
+                            <div class="bg-gradient-to-br from-purple-500 to-pink-500 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg">
+                                @calificacion.tbusuario.nombre.Substring(0, 1).ToUpper()
+                            </div>
+
+                            <div class="flex-1">
+                                <!-- Header -->
+                                <div class="flex items-center justify-between mb-2">
+                                    <div>
+                                        <h4 class="font-bold text-gray-900">
+                                            @calificacion.tbusuario.nombre @calificacion.tbusuario.apellido
+                                        </h4>
+                                        <p class="text-sm text-gray-500">
+                                            @calificacion.fecha_calificacion?.ToString("dd/MM/yyyy HH:mm")
+                                        </p>
+                                    </div>
+                                    <!-- Estrellas -->
+                                    <div class="stars-display">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= calificacion.puntuacion)
+                                            {
+                                                <i class="fas fa-star"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-star empty-star"></i>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Comentario -->
+                                @if (!string.IsNullOrEmpty(calificacion.comentario))
+                                {
+                                    <p class="text-gray-700 leading-relaxed">
+                                        @calificacion.comentario
+                                    </p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="bg-white rounded-xl shadow-lg p-12 text-center">
+                <i class="fas fa-comment-slash text-6xl text-gray-300 mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-700 mb-2">Aún no hay reseñas</h3>
+                <p class="text-gray-500">Sé el primero en compartir tu opinión sobre este libro</p>
+            </div>
+        }
+
+        <!-- Botón volver -->
+        <div class="mt-6 text-center">
+            <a href="@Url.Action("Catalogo", "Libros")" 
+               class="inline-flex items-center bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition duration-300">
+                <i class="fas fa-arrow-left mr-2"></i>Volver al Catálogo
+            </a>
+        </div>
+    </div>
+</main>

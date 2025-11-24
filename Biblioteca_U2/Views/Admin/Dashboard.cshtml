@@ -1,147 +1,159 @@
 ﻿@{
     ViewBag.Title = "Dashboard - Administrador";
-    Layout = null;
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title</title>
+<style>
+    .stat-card {
+        transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+</style>
 
-    <!-- Tailwind + FontAwesome -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { 'sans': ['Poppins', 'Segoe UI', 'sans-serif'] },
-                    colors: {
-                        'pink-gradient-start': '#f093fb',
-                        'pink-gradient-end': '#f5576c'
-                    }
-                }
-            }
-        }
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        ::-webkit-scrollbar {
-            display: none;
-        }
-    </style>
-</head>
+<!-- Main Content -->
+<main class="max-w-7xl mx-auto px-4">
+    
+    <!-- Header Section -->
+    <div class="mb-8">
+        <h2 class="text-3xl font-bold text-white mb-2">
+            <i class="fas fa-chart-line mr-3"></i>Dashboard Administrativo
+        </h2>
+        <p class="text-purple-100">Panel de control y estadísticas del sistema</p>
+    </div>
 
-<body class="font-sans min-h-screen bg-gradient-to-br from-pink-gradient-start to-pink-gradient-end">
-
-    <!-- Header -->
-    <header class="bg-white shadow-lg fixed top-0 left-0 w-full z-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
-            <div class="flex items-center">
-                <i class="fas fa-book text-2xl text-pink-600 mr-3"></i>
-                <h1 class="text-xl font-bold text-gray-800">Panel de Administración - Biblioteca UPT</h1>
+    <!-- Estadísticas Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Usuarios -->
+        <div class="stat-card bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium mb-1">Total Usuarios</p>
+                    <h3 class="text-3xl font-bold text-blue-600">@Convert.ToInt32(ViewBag.TotalUsuarios)</h3>
+                </div>
+                <div class="bg-blue-100 rounded-full p-4">
+                    <i class="fas fa-users text-3xl text-blue-600"></i>
+                </div>
             </div>
-            <a href="@Url.Action("Logout", "Account")"
-               class="bg-gradient-to-r from-pink-500 to-pink-600 text-white px-5 py-2 rounded-lg font-semibold hover:from-pink-600 hover:to-pink-700 transition duration-300 transform hover:scale-105 shadow-md">
-                <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
+            <div class="mt-4 flex items-center text-green-600 text-sm">
+                <i class="fas fa-arrow-up mr-1"></i>
+                <span>Activos en el sistema</span>
+            </div>
+        </div>
+
+        <!-- Libros -->
+        <div class="stat-card bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium mb-1">Total Libros</p>
+                    <h3 class="text-3xl font-bold text-green-600">@Convert.ToInt32(ViewBag.TotalLibros)</h3>
+                </div>
+                <div class="bg-green-100 rounded-full p-4">
+                    <i class="fas fa-book text-3xl text-green-600"></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center text-gray-600 text-sm">
+                <i class="fas fa-database mr-1"></i>
+                <span>En catálogo</span>
+            </div>
+        </div>
+
+        <!-- Préstamos -->
+        <div class="stat-card bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium mb-1">Préstamos Activos</p>
+                    <h3 class="text-3xl font-bold text-orange-600">@Convert.ToInt32(ViewBag.TotalPrestamos)</h3>
+                </div>
+                <div class="bg-orange-100 rounded-full p-4">
+                    <i class="fas fa-handshake text-3xl text-orange-600"></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center text-orange-600 text-sm">
+                <i class="fas fa-clock mr-1"></i>
+                <span>En circulación</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones Rápidas -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+            <i class="fas fa-bolt text-purple-600 mr-3"></i>
+            Acciones Rápidas
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Solicitudes -->
+            <a href="@Url.Action("SolicitudesPendientes", "Prestamos")" 
+               class="group bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-lg p-6 text-white transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <i class="fas fa-clipboard-list text-3xl opacity-80"></i>
+                    <i class="fas fa-arrow-right text-xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                </div>
+                <h4 class="text-lg font-bold mb-1">Solicitudes</h4>
+                <p class="text-sm text-purple-100">Gestionar peticiones pendientes</p>
+            </a>
+
+            <!-- Préstamos Activos -->
+            <a href="@Url.Action("PrestamosActivos", "Prestamos")" 
+               class="group bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-lg p-6 text-white transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <i class="fas fa-book-reader text-3xl opacity-80"></i>
+                    <i class="fas fa-arrow-right text-xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                </div>
+                <h4 class="text-lg font-bold mb-1">Préstamos</h4>
+                <p class="text-sm text-blue-100">Ver préstamos activos</p>
+            </a>
+
+            <!-- Registrar Libro -->
+            <a href="@Url.Action("Registrar", "Libros")" 
+               class="group bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-lg p-6 text-white transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <i class="fas fa-plus-circle text-3xl opacity-80"></i>
+                    <i class="fas fa-arrow-right text-xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                </div>
+                <h4 class="text-lg font-bold mb-1">Registrar Libro</h4>
+                <p class="text-sm text-green-100">Agregar nuevo libro</p>
+            </a>
+
+            <!-- Historial -->
+            <a href="@Url.Action("HistorialPrestamos", "Prestamos")" 
+               class="group bg-gradient-to-br from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 rounded-lg p-6 text-white transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <i class="fas fa-history text-3xl opacity-80"></i>
+                    <i class="fas fa-arrow-right text-xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                </div>
+                <h4 class="text-lg font-bold mb-1">Historial</h4>
+                <p class="text-sm text-gray-200">Registro de préstamos</p>
+            </a>
+
+            <!-- Reservas -->
+            <a href="@Url.Action("ReservasActivas", "Reservas")" 
+               class="group bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 rounded-lg p-6 text-white transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <i class="fas fa-bookmark text-3xl opacity-80"></i>
+                    <i class="fas fa-arrow-right text-xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                </div>
+                <h4 class="text-lg font-bold mb-1">Reservas</h4>
+                <p class="text-sm text-yellow-100">Gestionar reservas</p>
+            </a>
+
+            <!-- Devoluciones -->
+            <a href="@Url.Action("PrestamosActivos", "Prestamos")" 
+               class="group bg-gradient-to-br from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 rounded-lg p-6 text-white transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <i class="fas fa-undo text-3xl opacity-80"></i>
+                    <i class="fas fa-arrow-right text-xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                </div>
+                <h4 class="text-lg font-bold mb-1">Devoluciones</h4>
+                <p class="text-sm text-pink-100">Desde préstamos activos</p>
             </a>
         </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="pt-24 pb-12 px-4 flex justify-center">
-        <div class="bg-white rounded-2xl shadow-2xl p-10 max-w-3xl w-full">
-
-            <!-- Bienvenida -->
-            <section class="text-center mb-8">
-                <i class="fas fa-shield-alt text-6xl text-pink-600 mb-4"></i>
-                <h2 class="text-3xl font-bold text-gray-800 mb-2">¡Bienvenido, Administrador!</h2>
-                <p class="text-gray-600">Gestiona la biblioteca y las donaciones desde tu panel de control</p>
-            </section>
-
-            <!-- Información del Administrador -->
-            <section class="bg-gray-50 rounded-lg p-6 mb-8 border border-gray-100">
-                <h3 class="text-xl font-semibold text-gray-800 mb-4">
-                    <i class="fas fa-user-shield mr-2 text-pink-600"></i>Información del Administrador
-                </h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div><span class="font-medium text-gray-700">👤 Nombre:</span> <span class="text-gray-600">@ViewBag.AdminName</span></div>
-                    <div><span class="font-medium text-gray-700">🏷 Rol:</span> <span class="text-gray-600 capitalize">@ViewBag.UserRole</span></div>
-                    <div><span class="font-medium text-gray-700">🆔 ID:</span> <span class="text-gray-600">@ViewBag.UserId</span></div>
-                    <div><span class="font-medium text-gray-700">📚 Área:</span> <span class="text-gray-600">Administración</span></div>
-                </div>
-            </section>
-
-            <!-- Alerta -->
-            <section class="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
-                <div class="flex items-center">
-                    <i class="fas fa-exclamation-triangle text-red-600 mr-3"></i>
-                    <span class="text-red-800 font-semibold">Iniciaste sesión como ADMINISTRADOR</span>
-                </div>
-                <p class="text-red-700 text-sm mt-2">Tienes acceso completo al sistema y sus funcionalidades.</p>
-            </section>
-
-            <!-- Botones de acción -->
-            <section>
-                <h3 class="text-xl font-semibold text-gray-800 mb-6 text-center">
-                    <i class="fas fa-cogs mr-2 text-pink-600"></i>Panel de Control
-                </h3>
-
-                <div class="grid grid-cols-1 gap-4">
-                    <a href="@Url.Action("SolicitudesPendientes", "Prestamos")" class="bg-gradient-to-r from-pink-500 to-pink-600 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:from-pink-600 hover:to-pink-700 focus:ring-4 focus:ring-pink-300 transition duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center">
-                        <i class="fas fa-clipboard-list mr-3 text-xl"></i>
-                        <span>Solicitudes</span>
-                        <i class="fas fa-arrow-right ml-3"></i>
-                    </a>
-
-                    <a href="@Url.Action("PrestamosActivos", "Prestamos")" class="bg-gradient-to-r from-pink-500 to-pink-600 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:from-pink-600 hover:to-pink-700 focus:ring-4 focus:ring-pink-300 transition duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center">
-                        <i class="fas fa-book-reader mr-3 text-xl"></i>
-                        <span>Préstamos Activos</span>
-                        <i class="fas fa-arrow-right ml-3"></i>
-                    </a>
-
-                    <a href="@Url.Action("HistorialPrestamos", "Prestamos")" class="bg-gradient-to-r from-pink-500 to-pink-600 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:from-pink-600 hover:to-pink-700 focus:ring-4 focus:ring-pink-300 transition duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center">
-                        <i class="fas fa-history mr-3 text-xl"></i>
-                        <span>Historial de Préstamos</span>
-                        <i class="fas fa-arrow-right ml-3"></i>
-                    </a>
-                </div>
-            </section>
-
-            <!-- Estadísticas -->
-            <section class="mt-10 pt-8 border-t border-gray-200">
-                <h4 class="text-lg font-semibold text-gray-800 mb-4 text-center">
-                    <i class="fas fa-tachometer-alt mr-2 text-pink-600"></i>Estadísticas Rápidas
-                </h4>
-
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-
-                    <!-- Usuarios -->
-                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg">
-                        <i class="fas fa-users text-2xl text-blue-600 mb-2"></i>
-                        <div class="text-2xl font-bold text-blue-800">@Convert.ToInt32(ViewBag.TotalUsuarios)</div>
-                        <div class="text-sm text-blue-600">Usuarios</div>
-                    </div>
-
-                    <!-- Libros -->
-                    <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
-                        <i class="fas fa-book text-2xl text-green-600 mb-2"></i>
-                        <div class="text-2xl font-bold text-green-800">@Convert.ToInt32(ViewBag.TotalLibros)</div>
-                        <div class="text-sm text-green-600">Libros</div>
-                    </div>
-
-                    <!-- Préstamos -->
-                    <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg">
-                        <i class="fas fa-handshake text-2xl text-orange-600 mb-2"></i>
-                        <div class="text-2xl font-bold text-orange-800">@Convert.ToInt32(ViewBag.TotalPrestamos)</div>
-                        <div class="text-sm text-orange-600">Préstamos Activos</div>
-                    </div>
-                </div>
-            </section>
-        </div>
-    </main>
+    </div>
+</main>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
@@ -163,6 +175,3 @@
             });
         });
     </script>
-
-</body>
-</html>

@@ -100,6 +100,22 @@ namespace Biblioteca_U2.Controllers
                     .OrderByDescending(s => s.fecha_solicitud)
                     .ToList();
 
+                // ⭐ Obtener préstamos completados recientes (últimos 5) para calificar
+                var prestamosCompletados = db.tbprestamo
+                    .Include(p => p.tblibro)
+                    .Where(p => p.id_usuario_prestatario == userId && p.estado == "completado")
+                    .OrderByDescending(p => p.fecha_devolucion_real)
+                    .Take(5)
+                    .ToList();
+
+                // Verificar cuáles préstamos ya fueron calificados
+                var prestamosCalificados = db.tbcalificacion
+                    .Where(c => c.id_usuario_calificador == userId && c.tipo_calificacion == "comunicacion")
+                    .Select(c => c.id_prestamo)
+                    .ToList();
+
+                ViewBag.PrestamosCompletados = prestamosCompletados;
+                ViewBag.PrestamosCalificados = prestamosCalificados;
                 ViewBag.Solicitudes = solicitudes;
                 return View(prestamos);
             }
@@ -200,6 +216,41 @@ namespace Biblioteca_U2.Controllers
             }
 
             return RedirectToAction("MisPrestamos");
+        }
+
+        // 💰 Ver historial de créditos del estudiante
+        [AuthorizeUser]
+        public ActionResult HistorialCreditos(int pagina = 1)
+        {
+            try
+            {
+                int userId = Convert.ToInt32(Session["UserId"]);
+                var usuario = db.tbusuario.Find(userId);
+
+                const int registrosPorPagina = 15;
+
+                var query = db.tbmovimiento_credito
+                    .Where(m => m.id_usuario == userId)
+                    .OrderByDescending(m => m.fecha_movimiento);
+
+                var totalRegistros = query.Count();
+                var movimientos = query
+                    .Skip((pagina - 1) * registrosPorPagina)
+                    .Take(registrosPorPagina)
+                    .ToList();
+
+                ViewBag.PaginaActual = pagina;
+                ViewBag.TotalPaginas = (int)Math.Ceiling((double)totalRegistros / registrosPorPagina);
+                ViewBag.CreditosActuales = usuario.creditos_disponibles ?? 0;
+                ViewBag.EstadoCuenta = usuario.estado_cuenta;
+
+                return View(movimientos);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "❌ Error al cargar historial: " + ex.Message;
+                return View();
+            }
         }
 
         #endregion

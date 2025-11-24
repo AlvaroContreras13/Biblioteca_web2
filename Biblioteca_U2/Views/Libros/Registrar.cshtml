@@ -1,52 +1,11 @@
 ﻿@model Biblioteca_U2.Models.tblibro
 @{
     ViewBag.Title = "Registrar Donación de Libro";
-    Layout = null;
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title</title>
-
-    <!-- Tailwind + FontAwesome -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { 'sans': ['Poppins', 'Segoe UI', 'sans-serif'] },
-                    colors: {
-                        'pink-gradient-start': '#f093fb',
-                        'pink-gradient-end': '#f5576c'
-                    }
-                }
-            }
-        }
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
-
-<body class="font-sans min-h-screen bg-gradient-to-br from-pink-gradient-start to-pink-gradient-end">
-    <!-- Header -->
-    <header class="bg-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
-            <div class="flex items-center">
-                <i class="fas fa-book text-2xl text-pink-600 mr-3"></i>
-                <h1 class="text-lg font-bold text-gray-800">Panel de Administración - Biblioteca UPT</h1>
-            </div>
-            <a href="@Url.Action("Logout","Account")"
-               class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition duration-200 flex items-center">
-                <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
-            </a>
-        </div>
-    </header>
-
-    <!-- Main -->
-    <main class="py-10 px-4">
+<!-- Main -->
+<main class="px-4">
         <div class="max-w-4xl mx-auto">
             <!-- Breadcrumb -->
             <nav class="mb-6 text-white flex items-center space-x-2">
@@ -77,6 +36,32 @@
                         </div>
                     }
 
+                    <!-- 🤖 Sección de análisis con IA -->
+                    <div class="mb-8 bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-xl border-2 border-purple-200">
+                        <h3 class="text-lg font-bold text-purple-800 mb-4 flex items-center">
+                            <i class="fas fa-magic mr-2"></i>
+                            Autocompletar con IA - Escanea la Portada
+                        </h3>
+                        <div class="flex flex-col md:flex-row gap-4 items-center">
+                            <div class="flex-1">
+                                <input type="file" id="portada" accept="image/*" 
+                                       class="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 bg-white" />
+                                <p class="text-xs text-gray-600 mt-2">
+                                    <i class="fas fa-info-circle"></i> Sube una imagen de la portada del libro
+                                </p>
+                            </div>
+                            <button type="button" onclick="scanPortada()" 
+                                    class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 transition duration-300 shadow-lg">
+                                <i class="fas fa-magic mr-2"></i> Autocompletar
+                            </button>
+                        </div>
+                        <!-- Indicador de carga -->
+                        <div id="loadingIA" style="display:none;" class="mt-4 text-center">
+                            <i class="fas fa-spinner fa-spin text-3xl text-purple-600"></i>
+                            <p class="text-purple-700 font-semibold mt-2">Analizando portada...</p>
+                        </div>
+                    </div>
+
                     @using (Html.BeginForm("Registrar", "Libros", FormMethod.Post, new { @class = "space-y-6" }))
                     {
                         @Html.AntiForgeryToken()
@@ -87,13 +72,13 @@
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                                     <i class="fas fa-book mr-2 text-pink-600"></i>Nombre del Libro *
                                 </label>
-                                @Html.TextBoxFor(m => m.titulo, new { @class = "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500", placeholder = "Ingrese el título completo del libro" })
+                                @Html.TextBoxFor(m => m.titulo, new { @class = "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500", @id = "titulo", placeholder = "Ingrese el título completo del libro" })
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                                     <i class="fas fa-user-pen mr-2 text-pink-600"></i>Autor *
                                 </label>
-                                @Html.TextBoxFor(m => m.autor, new { @class = "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500", placeholder = "Nombre del autor o autores" })
+                                @Html.TextBoxFor(m => m.autor, new { @class = "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500", @id = "autor", placeholder = "Nombre del autor o autores" })
                             </div>
                         </div>
 
@@ -104,14 +89,14 @@
                                     <i class="fas fa-tags mr-2 text-pink-600"></i>Género *
                                 </label>
                                 @Html.DropDownListFor(m => m.id_genero, (SelectList)ViewBag.Generos, "Seleccione un género",
-                                    new { @class = "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500" })
+                                    new { @class = "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500", @id = "genero" })
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                                     <i class="fas fa-graduation-cap mr-2 text-pink-600"></i>Carrera Relacionada
                                 </label>
                                 @Html.DropDownListFor(m => m.id_carrera, (SelectList)ViewBag.Carreras, "Seleccione una carrera (opcional)",
-                                    new { @class = "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500" })
+                                    new { @class = "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500", @id = "carrera" })
                             </div>
                         </div>
 
@@ -121,7 +106,7 @@
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                                     <i class="fas fa-calendar mr-2 text-pink-600"></i>Año de Publicación
                                 </label>
-                                @Html.TextBoxFor(m => m.ano_publicacion, new { @type = "number", @class = "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500", placeholder = "Ejemplo: 2024" })
+                                @Html.TextBoxFor(m => m.ano_publicacion, new { @type = "number", @class = "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500", @id = "ano", placeholder = "Ejemplo: 2024" })
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -139,7 +124,7 @@
                             <label class="block text-sm font-semibold text-gray-700 mb-2">
                                 <i class="fas fa-align-left mr-2 text-pink-600"></i>Descripción
                             </label>
-                            @Html.TextAreaFor(m => m.sinopsis, new { @rows = "3", @class = "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500", placeholder = "Breve descripción del contenido del libro..." })
+                            @Html.TextAreaFor(m => m.sinopsis, new { @rows = "3", @class = "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500", @id = "descripcion", placeholder = "Breve descripción del contenido del libro..." })
                         </div>
 
                         <!-- Donador -->
@@ -167,5 +152,61 @@
             </div>
         </div>
     </main>
-</body>
-</html>
+
+    <!-- 🤖 Script para análisis con IA -->
+    <script>
+        function scanPortada() {
+            const fileInput = document.getElementById('portada');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Por favor selecciona una imagen primero');
+                return;
+            }
+
+            // Mostrar indicador de carga
+            document.getElementById('loadingIA').style.display = 'block';
+
+            // Crear FormData
+            const formData = new FormData();
+            formData.append('img', file);
+
+            // Enviar a la API
+            fetch('@Url.Action("AnalizarPortada", "Libros")', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Ocultar indicador de carga
+                document.getElementById('loadingIA').style.display = 'none';
+
+                if (data.exito) {
+                    // Autocompletar campos
+                    document.getElementById('titulo').value = data.titulo || '';
+                    document.getElementById('autor').value = data.autor || '';
+                    document.getElementById('descripcion').value = data.descripcion || '';
+                    
+                    if (data.ano > 0) {
+                        document.getElementById('ano').value = data.ano;
+                    }
+                    
+                    if (data.id_genero > 0) {
+                        document.getElementById('genero').value = data.id_genero;
+                    }
+                    
+                    if (data.id_carrera > 0) {
+                        document.getElementById('carrera').value = data.id_carrera;
+                    }
+
+                    alert('✅ ¡Campos autocompletados con éxito!');
+                } else {
+                    alert('❌ Error: ' + data.mensaje);
+                }
+            })
+            .catch(error => {
+                document.getElementById('loadingIA').style.display = 'none';
+                alert('❌ Error al conectar con el servidor: ' + error);
+            });
+        }
+    </script>

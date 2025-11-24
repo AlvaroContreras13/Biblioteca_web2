@@ -1,0 +1,334 @@
+@model IEnumerable<Biblioteca_U2.Models.tbmovimiento_credito>
+
+@{
+    ViewBag.Title = "Historial de Créditos";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+
+        .content-container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .card-custom {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .card-header-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .stats-card h3 {
+            margin: 0;
+            font-size: 36px;
+            font-weight: 700;
+        }
+
+        .stats-card.positive h3 {
+            color: #28a745;
+        }
+
+        .stats-card.negative h3 {
+            color: #dc3545;
+        }
+
+        .stats-card.warning h3 {
+            color: #ffc107;
+        }
+
+        .stats-card p {
+            margin: 5px 0 0 0;
+            color: #6c757d;
+        }
+
+        .transaction-item {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .transaction-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .transaction-item.ganancia {
+            border-left-color: #28a745;
+            background: #f1f9f4;
+        }
+
+        .transaction-item.gasto {
+            border-left-color: #dc3545;
+            background: #fef5f5;
+        }
+
+        .transaction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .transaction-amount {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .transaction-amount.positive {
+            color: #28a745;
+        }
+
+        .transaction-amount.negative {
+            color: #dc3545;
+        }
+
+        .transaction-date {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .transaction-description {
+            color: #495057;
+            font-size: 15px;
+            margin-top: 10px;
+        }
+
+        .badge-estado {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 80px;
+            margin-bottom: 20px;
+            color: #dee2e6;
+        }
+
+        .pagination-custom {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .pagination-custom a,
+        .pagination-custom span {
+            padding: 10px 15px;
+            background: white;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #667eea;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .pagination-custom a:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .pagination-custom .current {
+            background: #667eea;
+            color: white;
+        }
+
+        .back-btn {
+            background: white;
+            border: 2px solid #e9ecef;
+            color: #667eea;
+            padding: 10px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .back-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+</style>
+
+<div class="content-container" style="margin-top: 20px;">
+        <!-- Estadísticas -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="stats-card @(ViewBag.CreditosActuales >= 0 ? "positive" : ViewBag.CreditosActuales >= -50 ? "warning" : "negative")">
+                    <h3>@ViewBag.CreditosActuales</h3>
+                    <p><i class="fas fa-coins"></i> Créditos Disponibles</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <h3>@Model.Count()</h3>
+                    <p><i class="fas fa-list"></i> Movimientos Totales</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card">
+                    @{
+                        string estadoBadge = "success";
+                        string estadoIcono = "check-circle";
+                        if (ViewBag.EstadoCuenta == "suspendida")
+                        {
+                            estadoBadge = "warning";
+                            estadoIcono = "exclamation-triangle";
+                        }
+                        else if (ViewBag.EstadoCuenta == "bloqueada")
+                        {
+                            estadoBadge = "danger";
+                            estadoIcono = "ban";
+                        }
+                    }
+                    <span class="badge bg-@estadoBadge" style="font-size: 18px; padding: 10px 20px;">
+                        <i class="fas fa-@estadoIcono"></i> @(ViewBag.EstadoCuenta != null ? ViewBag.EstadoCuenta.ToString().ToUpper() : "ACTIVA")
+                    </span>
+                    <p style="margin-top: 10px;"><i class="fas fa-user-shield"></i> Estado de Cuenta</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información del Sistema de Créditos -->
+        <div class="info-box">
+            <h5><i class="fas fa-info-circle"></i> Sistema de Créditos</h5>
+            <ul style="margin: 10px 0 0 20px; line-height: 1.8;">
+                <li><strong>+10 créditos:</strong> Por devolver libros a tiempo</li>
+                <li><strong>+15 créditos:</strong> Por devolver libros 3+ días antes</li>
+                <li><strong>-20 créditos:</strong> Penalización por libro en condición regular</li>
+                <li><strong>-50 créditos:</strong> Penalización por libro dañado</li>
+                <li><strong>-30 créditos:</strong> Costo de renovar un préstamo</li>
+                <li><strong>0 a -50:</strong> Advertencia (máximo 1 libro)</li>
+                <li><strong>-51 a -100:</strong> Cuenta suspendida</li>
+                <li><strong>-101 o menos:</strong> Cuenta bloqueada</li>
+            </ul>
+        </div>
+
+        <!-- Historial de Transacciones -->
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <h3 class="mb-0">
+                    <i class="fas fa-history"></i> Historial de Movimientos
+                </h3>
+            </div>
+            <div class="p-4">
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var movimiento in Model)
+                    {
+                        var esGanancia = movimiento.tipo_movimiento == "ganancia";
+                        var claseTransaccion = esGanancia ? "ganancia" : "gasto";
+                        var claseAmount = esGanancia || movimiento.cantidad >= 0 ? "positive" : "negative";
+                        var signo = esGanancia || movimiento.cantidad >= 0 ? "+" : "";
+
+                        <div class="transaction-item @claseTransaccion">
+                            <div class="transaction-header">
+                                <div>
+                                    <span class="transaction-amount @claseAmount">
+                                        @signo@movimiento.cantidad créditos
+                                    </span>
+                                    <div class="transaction-date">
+                                        <i class="fas fa-calendar"></i>
+                                        @(movimiento.fecha_movimiento?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge @(esGanancia ? "bg-success" : "bg-danger")">
+                                        @(movimiento.tipo_movimiento != null ? movimiento.tipo_movimiento.ToUpper() : "N/A")
+                                    </span>
+                                    <div style="margin-top: 5px; font-size: 14px; color: #6c757d;">
+                                        Saldo: @movimiento.saldo_anterior → <strong>@movimiento.saldo_nuevo</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="transaction-description">
+                                <i class="fas fa-comment-alt"></i>
+                                @movimiento.descripcion
+                            </div>
+                        </div>
+                    }
+                    
+                    <!-- Paginación -->
+                    <div class="pagination-custom">
+                    @if (ViewBag.TotalPaginas > 1)
+                    {
+                        if (ViewBag.PaginaActual > 1)
+                        {
+                            <a href="@Url.Action("HistorialCreditos", new { pagina = ViewBag.PaginaActual - 1 })">
+                                <i class="fas fa-chevron-left"></i> Anterior
+                            </a>
+                        }
+
+                        for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+                        {
+                            if (i == ViewBag.PaginaActual)
+                            {
+                                <span class="current">@i</span>
+                            }
+                            else
+                            {
+                                <a href="@Url.Action("HistorialCreditos", new { pagina = i })">@i</a>
+                            }
+                        }
+
+                        if (ViewBag.PaginaActual < ViewBag.TotalPaginas)
+                        {
+                            <a href="@Url.Action("HistorialCreditos", new { pagina = ViewBag.PaginaActual + 1 })">
+                                Siguiente <i class="fas fa-chevron-right"></i>
+                            </a>
+                        }
+                    }
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h4>Sin movimientos de créditos</h4>
+                        <p>Aún no tienes transacciones en tu historial.</p>
+                        <p>Los créditos se ganan devolviendo libros a tiempo y se gastan en renovaciones.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

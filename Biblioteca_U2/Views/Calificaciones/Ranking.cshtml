@@ -1,0 +1,215 @@
+@{
+    ViewBag.Title = "Ranking de Usuarios";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<main class="px-4">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-yellow-500 to-orange-600 rounded-2xl shadow-2xl p-8 text-white mb-8 text-center">
+            <i class="fas fa-trophy text-6xl mb-4"></i>
+            <h1 class="text-4xl font-bold mb-2">Ranking de la Comunidad</h1>
+            <p class="text-yellow-100">Los usuarios más destacados de la biblioteca</p>
+        </div>
+
+        <!-- Tabs de categorías -->
+        <div class="bg-white rounded-xl shadow-lg mb-6">
+            <div class="flex border-b overflow-x-auto">
+                <button onclick="showTab('donadores')" 
+                        class="tab-btn flex-1 px-6 py-4 font-semibold text-gray-600 hover:text-green-600 hover:bg-green-50 transition border-b-4 border-transparent"
+                        id="tab-donadores">
+                    <i class="fas fa-gift mr-2"></i>Top Donadores
+                </button>
+                <button onclick="showTab('lectores')" 
+                        class="tab-btn flex-1 px-6 py-4 font-semibold text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition border-b-4 border-transparent"
+                        id="tab-lectores">
+                    <i class="fas fa-book-reader mr-2"></i>Top Lectores
+                </button>
+                <button onclick="showTab('reputacion')" 
+                        class="tab-btn flex-1 px-6 py-4 font-semibold text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 transition border-b-4 border-transparent"
+                        id="tab-reputacion">
+                    <i class="fas fa-star mr-2"></i>Mejor Reputación
+                </button>
+            </div>
+        </div>
+
+        <!-- Panel: Top Donadores -->
+        <div id="panel-donadores" class="tab-panel">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @{
+                    int posicion = 1;
+                    foreach (dynamic item in ViewBag.TopDonadores)
+                    {
+                        Biblioteca_U2.Models.tbusuario u = null;
+                        int donados = 0;
+                        try {
+                            u = item.Usuario;
+                            donados = (int)item.LibrosDonados;
+                        } catch {
+                            var type = item.GetType();
+                            u = type.GetProperty("Usuario").GetValue(item, null);
+                            donados = (int)type.GetProperty("LibrosDonados").GetValue(item, null);
+                        }
+                        string medalColor = posicion == 1 ? "text-yellow-500" : posicion == 2 ? "text-gray-400" : posicion == 3 ? "text-orange-600" : "text-gray-300";
+                        string bgGradient = posicion == 1 ? "from-yellow-100 to-yellow-50" : posicion == 2 ? "from-gray-100 to-gray-50" : posicion == 3 ? "from-orange-100 to-orange-50" : "from-gray-50 to-white";
+
+                        <div class="bg-gradient-to-br @bgGradient rounded-xl shadow-lg p-6 hover:shadow-xl transition duration-300 border-2 border-green-200">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="bg-green-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl">
+                                    @u.nombre.Substring(0, 1).ToUpper()
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-3xl font-bold text-gray-700">#@posicion</span>
+                                    @if (posicion <= 3)
+                                    {
+                                        <i class="fas fa-medal text-3xl @medalColor"></i>
+                                    }
+                                </div>
+                            </div>
+                            <h3 class="font-bold text-gray-900 text-lg mb-1">@u.nombre @u.apellido</h3>
+                            <p class="text-sm text-gray-600 mb-3">
+                                @(u.tbcarrera != null ? u.tbcarrera.nombre_carrera : "Sin carrera")
+                            </p>
+                            <div class="bg-white rounded-lg p-3 text-center">
+                                <p class="text-3xl font-bold text-green-600">@donados</p>
+                                <p class="text-sm text-gray-600">Libros Donados</p>
+                            </div>
+                        </div>
+
+                        posicion++;
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- Panel: Top Lectores -->
+        <div id="panel-lectores" class="tab-panel" style="display:none;">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @{
+                    posicion = 1;
+                    foreach (var u in ViewBag.TopLectores)
+                    {
+                        int leidos = u.numero_prestamos_completados ?? 0;
+                        string medalColor = posicion == 1 ? "text-yellow-500" : posicion == 2 ? "text-gray-400" : posicion == 3 ? "text-orange-600" : "text-gray-300";
+                        string bgGradient = posicion == 1 ? "from-purple-100 to-purple-50" : posicion == 2 ? "from-gray-100 to-gray-50" : posicion == 3 ? "from-orange-100 to-orange-50" : "from-gray-50 to-white";
+
+                        <div class="bg-gradient-to-br @bgGradient rounded-xl shadow-lg p-6 hover:shadow-xl transition duration-300 border-2 border-purple-200">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="bg-purple-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl">
+                                    @u.nombre.Substring(0, 1).ToUpper()
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-3xl font-bold text-gray-700">#@posicion</span>
+                                    @if (posicion <= 3)
+                                    {
+                                        <i class="fas fa-medal text-3xl @medalColor"></i>
+                                    }
+                                </div>
+                            </div>
+                            <h3 class="font-bold text-gray-900 text-lg mb-1">@u.nombre @u.apellido</h3>
+                            <p class="text-sm text-gray-600 mb-3">
+                                @(u.tbcarrera != null ? u.tbcarrera.nombre_carrera : "Sin carrera")
+                            </p>
+                            <div class="bg-white rounded-lg p-3 text-center">
+                                <p class="text-3xl font-bold text-purple-600">@leidos</p>
+                                <p class="text-sm text-gray-600">Libros Leídos</p>
+                            </div>
+                        </div>
+
+                        posicion++;
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- Panel: Mejor Reputación -->
+        <div id="panel-reputacion" class="tab-panel" style="display:none;">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @{
+                    posicion = 1;
+                    foreach (dynamic item in ViewBag.TopReputacion)
+                    {
+                        Biblioteca_U2.Models.tbusuario u = null;
+                        double promedio = 0;
+                        int total = 0;
+                        try {
+                            u = item.Usuario;
+                            promedio = (double)item.PromedioCalificacion;
+                            total = (int)item.TotalCalificaciones;
+                        } catch {
+                            var type = item.GetType();
+                            u = type.GetProperty("Usuario").GetValue(item, null);
+                            promedio = (double)type.GetProperty("PromedioCalificacion").GetValue(item, null);
+                            total = (int)type.GetProperty("TotalCalificaciones").GetValue(item, null);
+                        }
+                        string medalColor = posicion == 1 ? "text-yellow-500" : posicion == 2 ? "text-gray-400" : posicion == 3 ? "text-orange-600" : "text-gray-300";
+                        string bgGradient = posicion == 1 ? "from-yellow-100 to-yellow-50" : posicion == 2 ? "from-gray-100 to-gray-50" : posicion == 3 ? "from-orange-100 to-orange-50" : "from-gray-50 to-white";
+
+                        <div class="bg-gradient-to-br @bgGradient rounded-xl shadow-lg p-6 hover:shadow-xl transition duration-300 border-2 border-yellow-200">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="bg-yellow-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl">
+                                    @u.nombre.Substring(0, 1).ToUpper()
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-3xl font-bold text-gray-700">#@posicion</span>
+                                    @if (posicion <= 3)
+                                    {
+                                        <i class="fas fa-medal text-3xl @medalColor"></i>
+                                    }
+                                </div>
+                            </div>
+                            <h3 class="font-bold text-gray-900 text-lg mb-1">@u.nombre @u.apellido</h3>
+                            <p class="text-sm text-gray-600 mb-3">
+                                @(u.tbcarrera != null ? u.tbcarrera.nombre_carrera : "Sin carrera")
+                            </p>
+                            <div class="bg-white rounded-lg p-3 text-center">
+                                <div class="flex items-center justify-center gap-2 mb-1">
+                                    <p class="text-3xl font-bold text-yellow-600">@promedio.ToString("F1")</p>
+                                    <i class="fas fa-star text-yellow-500 text-2xl"></i>
+                                </div>
+                                <p class="text-sm text-gray-600">@total calificaciones</p>
+                            </div>
+                        </div>
+
+                        posicion++;
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    function showTab(tabName) {
+        // Ocultar todos los paneles
+        document.querySelectorAll('.tab-panel').forEach(panel => {
+            panel.style.display = 'none';
+        });
+
+        // Remover clase activa de todos los botones
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('text-green-600', 'bg-green-50', 'border-green-600',
+                'text-purple-600', 'bg-purple-50', 'border-purple-600',
+                'text-yellow-600', 'bg-yellow-50', 'border-yellow-600');
+            btn.classList.add('text-gray-600', 'border-transparent');
+        });
+
+        // Mostrar panel seleccionado
+        document.getElementById('panel-' + tabName).style.display = 'block';
+
+        // Activar botón correspondiente
+        const activeBtn = document.getElementById('tab-' + tabName);
+        activeBtn.classList.remove('text-gray-600', 'border-transparent');
+
+        if (tabName === 'donadores') {
+            activeBtn.classList.add('text-green-600', 'bg-green-50', 'border-green-600');
+        } else if (tabName === 'lectores') {
+            activeBtn.classList.add('text-purple-600', 'bg-purple-50', 'border-purple-600');
+        } else if (tabName === 'reputacion') {
+            activeBtn.classList.add('text-yellow-600', 'bg-yellow-50', 'border-yellow-600');
+        }
+    }
+
+    // Mostrar la primera pestaña por defecto
+    showTab('donadores');
+</script>

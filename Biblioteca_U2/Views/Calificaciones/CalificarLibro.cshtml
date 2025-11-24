@@ -1,0 +1,127 @@
+@model Biblioteca_U2.Models.tbprestamo
+@{
+    ViewBag.Title = "Calificar Libro";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var prestamo = ViewBag.Prestamo as Biblioteca_U2.Models.tbprestamo;
+}
+
+<style>
+    .rating-stars {
+        display: flex;
+        gap: 0.5rem;
+        font-size: 2.5rem;
+    }
+    .rating-stars input[type="radio"] {
+        display: none;
+    }
+    .rating-stars label {
+        cursor: pointer;
+        color: #D1D5DB;
+        transition: all 0.2s;
+    }
+    .rating-stars label:hover,
+    .rating-stars label:hover ~ label,
+    .rating-stars input:checked ~ label {
+        color: #FBBF24;
+        transform: scale(1.1);
+    }
+</style>
+
+<main class="px-4">
+    <div class="max-w-3xl mx-auto">
+        <!-- Breadcrumb -->
+        <nav class="mb-6 text-white flex items-center space-x-2">
+            <a href="@Url.Action("MisPrestamos","Prestamos")" class="hover:text-pink-200 flex items-center">
+                <i class="fas fa-book mr-1"></i> Mis Préstamos
+            </a>
+            <i class="fas fa-chevron-right text-pink-200"></i>
+            <span class="text-pink-200">Calificar Libro</span>
+        </nav>
+
+        <!-- Card -->
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <div class="bg-gradient-to-r from-yellow-500 to-orange-600 p-8 text-white flex items-center">
+                <div class="bg-white bg-opacity-20 p-4 rounded-full mr-6">
+                    <i class="fas fa-star text-4xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-3xl font-bold mb-2">¿Qué te pareció el libro?</h2>
+                    <p class="text-yellow-100">Tu opinión ayuda a otros estudiantes a elegir</p>
+                </div>
+            </div>
+
+            <div class="p-8">
+                <!-- Info del libro -->
+                <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 mb-8 border-2 border-purple-200">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-purple-600 text-white p-4 rounded-lg">
+                            <i class="fas fa-book text-3xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold text-purple-900 mb-2">@prestamo.tblibro.titulo</h3>
+                            <p class="text-purple-700 mb-1">
+                                <i class="fas fa-user mr-2"></i><strong>Autor:</strong> @prestamo.tblibro.autor
+                            </p>
+                            <p class="text-purple-700">
+                                <i class="fas fa-tag mr-2"></i><strong>Género:</strong> @prestamo.tblibro.tbgenero.nombre_genero
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulario de calificación -->
+                @using (Html.BeginForm("GuardarCalificacionLibro", "Calificaciones", FormMethod.Post, new { @class = "space-y-6" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="idPrestamo" value="@prestamo.id_prestamo" />
+
+                    <!-- Puntuación con estrellas -->
+                    <div class="text-center">
+                        <label class="block text-lg font-semibold text-gray-700 mb-4">
+                            <i class="fas fa-star-half-alt mr-2 text-yellow-500"></i>Calificación
+                        </label>
+                        <div class="rating-stars flex-row-reverse justify-center">
+                            <input type="radio" name="puntuacion" id="star5" value="5" required />
+                            <label for="star5"><i class="fas fa-star"></i></label>
+
+                            <input type="radio" name="puntuacion" id="star4" value="4" />
+                            <label for="star4"><i class="fas fa-star"></i></label>
+
+                            <input type="radio" name="puntuacion" id="star3" value="3" />
+                            <label for="star3"><i class="fas fa-star"></i></label>
+
+                            <input type="radio" name="puntuacion" id="star2" value="2" />
+                            <label for="star2"><i class="fas fa-star"></i></label>
+
+                            <input type="radio" name="puntuacion" id="star1" value="1" />
+                            <label for="star1"><i class="fas fa-star"></i></label>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-2">Selecciona de 1 a 5 estrellas</p>
+                    </div>
+
+                    <!-- Comentario -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-comment mr-2 text-yellow-600"></i>Tu reseña (opcional)
+                        </label>
+                        <textarea name="comentario" rows="5" 
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500"
+                                  placeholder="Comparte tu opinión sobre el libro: ¿Qué te gustó? ¿Lo recomendarías? ¿Para qué tipo de lector es ideal?"></textarea>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+                        <a href="@Url.Action("MisPrestamos", "Prestamos")"
+                           class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-lg font-semibold text-lg flex items-center justify-center transition duration-300">
+                            <i class="fas fa-times mr-2"></i>Omitir
+                        </a>
+                        <button type="submit"
+                                class="flex-1 bg-gradient-to-r from-yellow-500 to-orange-600 text-white py-3 px-6 rounded-lg font-semibold text-lg hover:from-yellow-600 hover:to-orange-700 focus:ring-4 focus:ring-yellow-300 transition duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center">
+                            <i class="fas fa-paper-plane mr-2"></i>Enviar Reseña
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</main>

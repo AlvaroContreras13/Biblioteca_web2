@@ -1,0 +1,295 @@
+@model IEnumerable<Biblioteca_U2.Models.tbreserva>
+
+@{
+    ViewBag.Title = "Reservas Activas - Admin";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+
+        .content-container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .card-custom {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .card-header-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        table {
+            margin: 0;
+        }
+
+        thead {
+            background: #f8f9fa;
+        }
+
+        thead th {
+            color: #495057;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+            padding: 15px;
+        }
+
+        tbody td {
+            padding: 15px;
+            vertical-align: middle;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .position-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 700;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .badge-estado {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 100px;
+            margin-bottom: 20px;
+            color: #dee2e6;
+        }
+
+        .back-btn {
+            background: white;
+            border: 2px solid #e9ecef;
+            color: #667eea;
+            padding: 10px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .back-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .book-group {
+            background: #f8f9fa;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+        }
+
+        .book-group h5 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            margin: 0;
+            font-size: 36px;
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        .stat-card p {
+            margin: 5px 0 0 0;
+            color: #6c757d;
+        }
+    </style>
+
+<div class="content-container">
+        <!-- Estadísticas -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <h3>@(Model?.Count() ?? 0)</h3>
+                <p><i class="fas fa-bookmark"></i> Total Reservas Activas</p>
+            </div>
+            <div class="stat-card">
+                <h3>@(Model?.Where(r => r.estado == "notificada").Count() ?? 0)</h3>
+                <p><i class="fas fa-bell"></i> Pendientes de Confirmación</p>
+            </div>
+            <div class="stat-card">
+                <h3>@(Model?.Select(r => r.id_libro).Distinct().Count() ?? 0)</h3>
+                <p><i class="fas fa-book"></i> Libros con Reservas</p>
+            </div>
+        </div>
+
+        <!-- Contenido -->
+        <div class="card-custom">
+            <div class="card-header-custom">
+                <h3 class="mb-0">
+                    <i class="fas fa-bookmark"></i> Gestión de Reservas
+                </h3>
+                <p class="mb-0 mt-2" style="opacity: 0.9;">
+                    Visualiza todas las reservas activas y notificadas agrupadas por libro
+                </p>
+            </div>
+            <div class="p-4">
+                @if (Model != null && Model.Any())
+                {
+                    var reservasPorLibro = Model.GroupBy(r => r.id_libro);
+
+                    foreach (var grupo in reservasPorLibro)
+                    {
+                        var primerReserva = grupo.First();
+
+                        <div class="book-group">
+                            <h5>
+                                <i class="fas fa-book"></i>
+                                @primerReserva.tblibro.titulo
+                                <span class="badge bg-secondary ms-2">@primerReserva.tblibro.tbgenero.nombre_genero</span>
+                                <span class="badge bg-info ms-2">@grupo.Count() reserva(s)</span>
+                            </h5>
+
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 80px;">Posición</th>
+                                            <th>Usuario</th>
+                                            <th>Fecha Reserva</th>
+                                            <th>Días Esperando</th>
+                                            <th>Estado</th>
+                                            <th>Expira</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var reserva in grupo.OrderBy(r => r.posicion_cola))
+                                        {
+                                            var diasEspera = (DateTime.Now - (reserva.fecha_reserva ?? DateTime.Now)).Days;
+                                            var esNotificada = reserva.estado == "notificada";
+
+                                            <tr style="@(esNotificada ? "background: #d1f2eb;" : "")">
+                                                <td class="text-center">
+                                                    <div class="position-number">
+                                                        @reserva.posicion_cola
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <strong>@reserva.tbusuario.nombre @reserva.tbusuario.apellido</strong>
+                                                    <br />
+                                                    <small class="text-muted">@reserva.tbusuario.email</small>
+                                                </td>
+                                                <td>@((reserva.fecha_reserva.HasValue ? reserva.fecha_reserva.Value.ToString("dd/MM/yyyy HH:mm") : "N/A"))</td>
+                                                <td>
+                                                    <span class="badge bg-secondary">@diasEspera día(s)</span>
+                                                </td>
+                                                <td>
+                                                    @if (esNotificada)
+                                                    {
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-bell"></i> NOTIFICADA
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-primary">
+                                                            <i class="fas fa-clock"></i> ACTIVA
+                                                        </span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    @if (esNotificada && reserva.fecha_expiracion_confirmacion.HasValue)
+                                                    {
+                                                        var horasRestantes = (reserva.fecha_expiracion_confirmacion.Value - DateTime.Now).TotalHours;
+                                                        if (horasRestantes > 0)
+                                                        {
+                                                            <span class="badge bg-warning text-dark">
+                                                                <i class="fas fa-hourglass-half"></i>
+                                                                @Math.Round(horasRestantes, 1) hora(s)
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-danger">
+                                                                <i class="fas fa-exclamation-triangle"></i> Expirada
+                                                            </span>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">-</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="fas fa-bookmark"></i>
+                        <h4>No hay reservas activas</h4>
+                        <p>Actualmente no hay libros reservados por los estudiantes.</p>
+                        <p>Las reservas aparecerán aquí cuando los estudiantes reserven libros no disponibles.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Información -->
+        <div class="alert alert-info">
+            <h5><i class="fas fa-info-circle"></i> Información sobre Reservas</h5>
+            <ul style="margin: 10px 0 0 20px; line-height: 1.8;">
+                <li><strong>Estado ACTIVA:</strong> El estudiante está esperando su turno en la cola.</li>
+                <li><strong>Estado NOTIFICADA:</strong> El libro está disponible y se notificó al estudiante. Tiene 48 horas para confirmar.</li>
+                <li><strong>Si expira:</strong> La reserva pasa al siguiente en la cola automáticamente.</li>
+                <li><strong>Al devolver un libro:</strong> El sistema notifica automáticamente al primero en la cola.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
